@@ -1,0 +1,3058 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+<title>HAVCAN — Have Work. Can Do It.</title>
+<!-- Tailwind CSS CDN -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts: Plus Jakarta Sans & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Lucide Icons -->
+<script src="https://unpkg.com/lucide@latest"></script>
+<!--
+  Set this to the HTTPS origin of the separately hosted HAVCAN backend when
+  the frontend and backend use different domains. Leave it empty when the
+  backend is served from the same origin. This contains no credentials.
+-->
+<meta name="havcan-api-base-url" content=""/>
+<script>
+    window.HAVCAN_CONFIG = window.HAVCAN_CONFIG || { apiBaseUrl: '' };
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#FAF5FF',
+              100: '#F3E8FF',
+              200: '#E9D5FF',
+              300: '#D8B4FE',
+              400: '#C084FC',
+              500: '#A855F7',
+              600: '#9333EA',
+              700: '#7E22CE',
+              800: '#6B21A8',
+              900: '#4C1D95',
+              950: '#2E1065',
+            },
+            accent: {
+              DEFAULT: '#7C3AED',
+              hover: '#6D28D9'
+            },
+            surface: {
+              base: '#FAF9FC',
+              card: '#FFFFFF',
+              border: '#EAE6F0',
+              muted: '#6B7280'
+            }
+          }
+        }
+      }
+    }
+</script>
+<style>
+    * {
+      -webkit-tap-highlight-color: transparent;
+      box-sizing: border-box;
+      outline: none;
+    }
+    body {
+      background-color: #0c0a13;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      margin: 0;
+      padding: 0;
+    }
+    body.in-chat-mode {
+      overflow: hidden !important;
+      height: 100dvh !important;
+    }
+    body.showcase-viewer-open {
+      overflow: hidden !important;
+      height: 100dvh !important;
+    }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    .app-screen {
+      max-width: 420px;
+      margin: 0 auto;
+      min-height: 100vh;
+      background: #FAF9FC;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 60px rgba(0,0,0,0.7);
+    }
+    .app-screen.chat-viewport-locked {
+      height: 100dvh !important;
+      min-height: 100dvh !important;
+      max-height: 100dvh !important;
+      overflow: hidden !important;
+      padding-bottom: 0 !important;
+    }
+    .view-anim {
+      animation: nativePageTransition 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes nativePageTransition {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .btn-press {
+      transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.4, 1), background-color 0.15s ease;
+      will-change: transform;
+    }
+    .btn-press:active {
+      transform: scale(0.97);
+    }
+    button:active,
+    a.btn-press:active,
+    [role="button"]:active {
+      transform: scale(0.97);
+    }
+    .has-tap-ripple {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+    }
+    .tap-ripple {
+      position: absolute !important;
+      z-index: 0 !important;
+      width: 18px;
+      height: 18px;
+      border-radius: 9999px;
+      pointer-events: none;
+      transform: translate(-50%, -50%) scale(0);
+      background: radial-gradient(circle, rgba(255,255,255,0.28) 0%, rgba(196,181,253,0.2) 42%, rgba(196,181,253,0) 74%);
+      animation: tapRipple 0.46s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+    }
+    .showcase-back-button {
+      min-width: 44px;
+      min-height: 44px;
+    }
+    .showcase-back-button .tap-ripple {
+      background: radial-gradient(circle, rgba(124,58,237,0.28) 0%, rgba(167,139,250,0.2) 42%, rgba(196,181,253,0) 74%);
+    }
+    @keyframes tapRipple {
+      0% { opacity: 0.72; transform: translate(-50%, -50%) scale(0); }
+      58% { opacity: 0.3; }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(4.6); }
+    }
+    .nav-btn {
+      overflow: hidden;
+      border-radius: 9999px;
+    }
+    .nav-tap-glass {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 26px;
+      height: 26px;
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 0;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.2);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.16), 0 3px 12px rgba(255,255,255,0.08);
+      transform: translate(-50%, -50%) scale(0.45);
+      animation: navTapGlass 0.62s cubic-bezier(0.2, 0.8, 0.4, 1) forwards;
+    }
+    @keyframes navTapGlass {
+      0% { opacity: 0.72; transform: translate(-50%, -50%) scale(0.45); }
+      52% { opacity: 0.32; }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.75); }
+    }
+
+    /* =========================================================
+       1. CONTINUOUS SINGLE-SURFACE NAVIGATION
+       The dock and glass indicator stay in one coordinate system.
+       ========================================================= */
+    #bottom-bar-container {
+      --nav-max-width: 350px;
+      --nav-radius: 999px;
+      --nav-padding-x: 8px;
+      --nav-padding-y: 4px;
+      --nav-blur: 18px;
+      opacity: 0.96;
+      filter: saturate(0.96);
+      background-color: rgba(0, 0, 0, 0.96);
+      border: 1px solid rgba(63, 63, 70, 0.95);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.84), 0 0 0 1px rgba(255,255,255,0.06);
+      margin-left: auto;
+      margin-right: auto;
+      position: relative;
+      max-width: var(--nav-max-width);
+      padding: var(--nav-padding-y) var(--nav-padding-x);
+      border-radius: var(--nav-radius);
+      backdrop-filter: blur(var(--nav-blur));
+      -webkit-backdrop-filter: blur(var(--nav-blur));
+      will-change: max-width, border-radius, padding, filter, box-shadow, background-color;
+      transition: max-width 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  border-radius 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  padding 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  filter 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  backdrop-filter 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  -webkit-backdrop-filter 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  opacity 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  box-shadow 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  background-color 0.38s ease;
+    }
+    #bottom-bar-container.nav-compact {
+      --nav-max-width: 350px;
+      --nav-radius: 9999px;
+      --nav-padding-x: 8px;
+      --nav-padding-y: 4px;
+      --nav-blur: 18px;
+    }
+    #bottom-bar-container.nav-expanded {
+      --nav-max-width: 394px;
+      --nav-radius: 9999px;
+      --nav-padding-x: 10px;
+      --nav-padding-y: 6px;
+      --nav-blur: 24px;
+      opacity: 1;
+      filter: saturate(1);
+      background-color: rgba(12, 12, 15, 0.98);
+      box-shadow: 0 16px 44px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(255,255,255,0.08);
+    }
+
+    /* Active glass indicator: always measured relative to this nav surface. */
+    #nav-capsule {
+      position: absolute;
+      top: var(--nav-padding-y);
+      bottom: var(--nav-padding-y);
+      left: 0;
+      height: auto;
+      background: rgba(39, 39, 42, 0.96);
+      border: 1px solid rgba(82, 82, 91, 0.9);
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 1;
+      will-change: transform, width, opacity, border-radius, filter, box-shadow;
+      transform: translate3d(0, 0, 0);
+      opacity: 1;
+      filter: blur(0);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.04), 0 5px 14px rgba(0,0,0,0.24);
+      transition: transform 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  width 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  top 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  bottom 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  border-radius 0.38s cubic-bezier(0.32, 0.72, 0, 1),
+                  opacity 0.28s ease,
+                  filter 0.38s ease,
+                  box-shadow 0.38s ease;
+    }
+    #bottom-bar-container.nav-expanded #nav-capsule {
+      border-radius: 9999px;
+      filter: blur(0.1px);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 7px 18px rgba(0,0,0,0.3);
+    }
+    #nav-capsule::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 16px;
+      height: 2.5px;
+      background: #A855F7;
+      border-radius: 9999px;
+      opacity: 0.95;
+    }
+
+    .nav-btn {
+      position: relative;
+      z-index: 10;
+      transition: transform 0.15s ease;
+      min-height: 48px;
+    }
+    .nav-btn:active {
+      transform: scale(0.92);
+    }
+    .nav-icon {
+      transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1), color 0.2s ease;
+    }
+    .nav-text {
+      transition: opacity 0.25s ease, color 0.2s ease, transform 0.32s cubic-bezier(0.32, 0.72, 0, 1);
+      font-weight: 500;
+      line-height: 1;
+    }
+    #standard-bottom-bar-shell {
+      transition: opacity 0.26s cubic-bezier(0.32, 0.72, 0, 1),
+                  transform 0.32s cubic-bezier(0.32, 0.72, 0, 1),
+                  visibility 0.26s ease;
+    }
+    #standard-bottom-bar-shell.nav-search-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateX(-50%) translateY(18px);
+    }
+    #main-app-screen.search-layout-hidden {
+      padding-bottom: 0 !important;
+    }
+    #app-view.search-route-enter {
+      animation: searchSurfaceRise 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+    }
+    #app-view.search-route-exit {
+      animation: searchSurfaceDrop 0.2s cubic-bezier(0.4, 0, 1, 1) both;
+    }
+    @keyframes searchSurfaceRise {
+      from { opacity: 0.72; transform: translateY(28px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes searchSurfaceDrop {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0.72; transform: translateY(28px); }
+    }
+
+    #chat-messages-container {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+    /* Photo Viewer Transition */
+    #photo-viewer-modal {
+      transition: opacity 0.24s ease, visibility 0.24s ease;
+    }
+    #photo-viewer-modal.viewer-hidden {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    #photo-viewer-modal.viewer-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+    }
+    #photo-viewer-modal {
+      z-index: 70 !important;
+    }
+
+    /* Full-screen showcase viewer: one service-scoped horizontal track. */
+    #showcase-viewer {
+      position: fixed;
+      inset: 0;
+      z-index: 60;
+      background: rgba(12, 10, 19, 0.72);
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      transform: translateY(100%);
+      transition: opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+                  transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),
+                  visibility 0s linear 0.3s;
+    }
+    #showcase-viewer.showcase-viewer-active {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transform: translateY(0);
+      transition-delay: 0s;
+    }
+    #showcase-viewer-shell {
+      position: relative;
+      width: min(100%, 420px);
+      height: 100dvh;
+      margin: 0 auto;
+      overflow: hidden;
+      background: #FAF9FC;
+      display: flex;
+      flex-direction: column;
+    }
+    #showcase-track-viewport {
+      min-height: 0;
+      flex: 0 0 auto;
+      overflow-x: hidden;
+      overflow-y: hidden;
+      touch-action: pan-y;
+      overscroll-behavior-x: contain;
+      cursor: grab;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    #showcase-track-viewport:active {
+      cursor: grabbing;
+    }
+    #showcase-track {
+      display: flex;
+      width: 100%;
+      height: auto;
+      align-items: flex-start;
+      transform: translate3d(0, 0, 0);
+      transition: transform 0.28s cubic-bezier(0.22, 0.75, 0.2, 1);
+      will-change: transform;
+    }
+    #showcase-track.is-dragging {
+      transition: none;
+    }
+    .showcase-slide {
+      flex: 0 0 100%;
+      min-width: 0;
+      height: auto;
+      overflow: visible;
+      padding: 0.85rem 1rem 0;
+      -webkit-overflow-scrolling: touch;
+    }
+    #showcase-details-scroll {
+      min-height: 0;
+      flex: 1;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+      padding: 0 1rem 6.5rem;
+    }
+    #showcase-static-details {
+      padding-top: 0.9rem;
+    }
+    .showcase-preview-button {
+      display: block;
+      width: 100%;
+      overflow: hidden;
+      border-radius: 1rem;
+      background: transparent;
+      box-shadow: none;
+    }
+    .showcase-preview-button img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: min(60dvh, 460px);
+      object-fit: contain;
+      background: transparent;
+      transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.4, 1);
+    }
+    .showcase-preview-button:active img {
+      transform: scale(0.985);
+    }
+    .showcase-related-strip {
+      border-top: 1px solid rgba(221, 214, 232, 0.72);
+      padding-top: 0.9rem;
+    }
+    .showcase-related-card {
+      width: 132px;
+      flex: 0 0 132px;
+      overflow: hidden;
+      border-radius: 0.9rem;
+      background: rgba(255,255,255,0.72);
+      border: 1px solid rgba(234, 230, 240, 0.9);
+      text-align: left;
+    }
+    .showcase-related-card img {
+      display: block;
+      width: 100%;
+      height: 72px;
+      object-fit: contain;
+      background: #f4f1f8;
+    }
+    #showcase-chat-fab {
+      position: absolute;
+      right: 1rem;
+      bottom: max(1.1rem, env(safe-area-inset-bottom));
+      z-index: 4;
+      min-width: 112px;
+      height: 58px;
+      padding: 0 0.85rem 0 0.55rem;
+      border-radius: 1.15rem;
+      background: #160c27;
+      color: white;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      box-shadow: 0 12px 28px rgba(36, 16, 65, 0.32), 0 0 0 1px rgba(255,255,255,0.12);
+      transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.4, 1),
+                  box-shadow 0.18s ease,
+                  background-color 0.18s ease;
+    }
+    #showcase-chat-fab:hover {
+      background: #24103e;
+      box-shadow: 0 14px 32px rgba(36, 16, 65, 0.38), 0 0 0 1px rgba(255,255,255,0.16);
+    }
+    #showcase-chat-fab img {
+      width: 34px;
+      height: 34px;
+      padding: 0.25rem;
+      border-radius: 0.7rem;
+      background: white;
+      object-fit: contain;
+    }
+
+     /* =========================================================
+        2. PROJECT WORKSPACE
+        Quiet surfaces and soft layers replace order-history cards.
+        ========================================================= */
+     .project-page {
+       color: #1b1329;
+       animation: projectPageIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
+     }
+     @keyframes projectPageIn {
+       from { opacity: 0; transform: translateY(5px); }
+       to { opacity: 1; transform: translateY(0); }
+     }
+     .project-kicker {
+       color: #7c3aed;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 800;
+       letter-spacing: 0.16em;
+       text-transform: uppercase;
+     }
+     .project-page-title {
+       color: #170b28;
+       font-size: 21px;
+       line-height: 1.16;
+       letter-spacing: -0.045em;
+       font-weight: 800;
+     }
+     .project-page-subtitle {
+       color: #766b83;
+       font-size: 11px;
+       line-height: 1.5;
+       max-width: 310px;
+     }
+     .project-list-summary {
+       display: inline-flex;
+       align-items: center;
+       gap: 6px;
+       color: #6b21a8;
+       background: #f0e8fb;
+       border-radius: 999px;
+       padding: 6px 9px;
+       font-size: 10px;
+       line-height: 1;
+       font-weight: 800;
+     }
+     .project-list-summary::before {
+       content: '';
+       width: 6px;
+       height: 6px;
+       border-radius: 999px;
+       background: #a855f7;
+       box-shadow: 0 0 0 3px rgba(168,85,247,0.12);
+     }
+     .project-list {
+       display: grid;
+       gap: 9px;
+     }
+     .project-row {
+       display: block;
+       width: 100%;
+       padding: 13px 13px 12px;
+       text-align: left;
+       border: 0;
+       border-radius: 18px;
+       background: rgba(255,255,255,0.82);
+       box-shadow: 0 8px 22px rgba(73, 42, 104, 0.06);
+       transition: transform 0.18s cubic-bezier(0.2,0.8,0.4,1),
+                   background-color 0.18s ease,
+                   box-shadow 0.18s ease;
+     }
+     .project-row:hover {
+       background: #ffffff;
+       box-shadow: 0 11px 28px rgba(73, 42, 104, 0.1);
+     }
+     .project-row:active {
+       transform: scale(0.987);
+     }
+     .project-row-head {
+       display: flex;
+       align-items: flex-start;
+       justify-content: space-between;
+       gap: 10px;
+     }
+     .project-service {
+       display: flex;
+       min-width: 0;
+       align-items: center;
+       gap: 9px;
+     }
+     .project-service-icon {
+       display: inline-flex;
+       width: 31px;
+       height: 31px;
+       flex: 0 0 31px;
+       align-items: center;
+       justify-content: center;
+       border-radius: 11px;
+       color: #6d28d9;
+       background: #f0e8fb;
+     }
+     .project-service-icon svg {
+       width: 15px;
+       height: 15px;
+       stroke-width: 2.2;
+     }
+     .project-service-name {
+       overflow: hidden;
+       color: #241531;
+       font-size: 12px;
+       line-height: 1.25;
+       font-weight: 800;
+       text-overflow: ellipsis;
+       white-space: nowrap;
+     }
+     .project-service-type {
+       margin-top: 3px;
+       color: #988da3;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-status {
+       display: inline-flex;
+       flex: 0 0 auto;
+       align-items: center;
+       gap: 5px;
+       border-radius: 999px;
+       padding: 6px 8px;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 800;
+       white-space: nowrap;
+     }
+     .project-status::before {
+       content: '';
+       width: 5px;
+       height: 5px;
+       border-radius: 999px;
+       background: currentColor;
+     }
+     .project-status-pending { color: #8260a7; background: #f1ebfa; }
+     .project-status-confirmed { color: #256b76; background: #e6f5f3; }
+     .project-status-in-progress { color: #6d28d9; background: #eee7ff; }
+     .project-status-quality-check { color: #9a5b13; background: #fff3df; }
+     .project-status-client-review { color: #2864a0; background: #e7f1fc; }
+     .project-status-revision { color: #a0447a; background: #fbeaf4; }
+     .project-status-completed { color: #22734f; background: #e6f6ec; }
+     .project-row-meta {
+       display: flex;
+       align-items: center;
+       gap: 9px;
+       margin: 12px 0 10px 40px;
+       color: #8b8094;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-row-meta span {
+       display: inline-flex;
+       align-items: center;
+       gap: 4px;
+     }
+     .project-row-meta svg {
+       width: 11px;
+       height: 11px;
+       color: #a89ab4;
+     }
+     .project-progress-line {
+       display: flex;
+       align-items: center;
+       gap: 8px;
+       margin-left: 40px;
+     }
+     .project-progress-track {
+       height: 5px;
+       flex: 1;
+       overflow: hidden;
+       border-radius: 999px;
+       background: #eeeaf2;
+     }
+     .project-progress-fill {
+       height: 100%;
+       border-radius: inherit;
+       background: linear-gradient(90deg, #9b6be8, #6d28d9);
+       transition: width 0.35s cubic-bezier(0.2,0.8,0.4,1);
+     }
+     .project-progress-value {
+       min-width: 30px;
+       color: #6d28d9;
+       font-size: 10px;
+       line-height: 1;
+       font-weight: 800;
+       text-align: right;
+     }
+     .project-detail-page {
+       padding-bottom: 48px;
+     }
+     .project-back {
+       display: inline-flex;
+       align-items: center;
+       gap: 5px;
+       padding: 3px 0;
+       color: #766b83;
+       font-size: 10px;
+       line-height: 1;
+       font-weight: 800;
+       transition: color 0.16s ease, transform 0.16s ease;
+     }
+     .project-back:hover { color: #32115e; }
+     .project-back:active { transform: translateX(-2px); }
+     .project-detail-heading {
+       display: flex;
+       align-items: center;
+       gap: 10px;
+       margin-top: 14px;
+     }
+     .project-detail-heading .project-service-icon {
+       width: 39px;
+       height: 39px;
+       flex-basis: 39px;
+       border-radius: 13px;
+       background: #e9ddfb;
+     }
+     .project-detail-heading .project-service-icon svg {
+       width: 18px;
+       height: 18px;
+     }
+     .project-detail-heading h1 {
+       color: #170b28;
+       font-size: 16px;
+       line-height: 1.15;
+       font-weight: 800;
+       letter-spacing: -0.03em;
+     }
+     .project-detail-heading p {
+       margin-top: 4px;
+       color: #91859c;
+       font-size: 10px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-overview {
+       margin-top: 15px;
+       padding: 14px;
+       border-radius: 19px;
+       background: linear-gradient(135deg, #2a104a 0%, #170b28 100%);
+       color: white;
+       box-shadow: 0 12px 25px rgba(44, 18, 72, 0.16);
+     }
+     .project-overview-top {
+       display: flex;
+       align-items: flex-start;
+       justify-content: space-between;
+       gap: 8px;
+     }
+     .project-overview-label {
+       color: #cbb7e3;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 800;
+       letter-spacing: 0.12em;
+       text-transform: uppercase;
+     }
+     .project-overview-id {
+       margin-top: 5px;
+       color: white;
+       font-size: 13px;
+       line-height: 1;
+       font-weight: 800;
+     }
+     .project-overview .project-status {
+       color: #f1eaff;
+       background: rgba(255,255,255,0.13);
+     }
+     .project-overview .project-status::before { background: #c084fc; }
+     .project-overview-progress {
+       display: flex;
+       align-items: flex-end;
+       justify-content: space-between;
+       gap: 10px;
+       margin-top: 18px;
+     }
+     .project-overview-progress strong {
+       display: block;
+       color: white;
+       font-size: 22px;
+       line-height: 0.9;
+       letter-spacing: -0.05em;
+     }
+     .project-overview-progress span {
+       display: block;
+       margin-top: 5px;
+       color: #cbb7e3;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-overview-date {
+       color: #e4d9f0;
+       font-size: 9px;
+       line-height: 1.4;
+       font-weight: 700;
+       text-align: right;
+     }
+     .project-overview-track {
+       height: 5px;
+       margin-top: 11px;
+       overflow: hidden;
+       border-radius: 999px;
+       background: rgba(255,255,255,0.15);
+     }
+     .project-overview-track span {
+       display: block;
+       height: 100%;
+       margin: 0;
+       border-radius: inherit;
+       background: #c084fc;
+     }
+     .project-section {
+       margin-top: 18px;
+     }
+     .project-section-heading {
+       display: flex;
+       align-items: center;
+       justify-content: space-between;
+       gap: 8px;
+       margin-bottom: 8px;
+     }
+     .project-section-heading h2 {
+       color: #2a1a37;
+       font-size: 11px;
+       line-height: 1;
+       font-weight: 800;
+       letter-spacing: -0.01em;
+     }
+     .project-section-heading span {
+       color: #9a8fa4;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-surface {
+       border-radius: 16px;
+       background: rgba(255,255,255,0.76);
+       box-shadow: 0 7px 18px rgba(73, 42, 104, 0.045);
+     }
+     .project-overview-grid {
+       display: grid;
+       grid-template-columns: repeat(2, minmax(0, 1fr));
+       gap: 1px;
+       overflow: hidden;
+       background: #f1ecf5;
+     }
+     .project-overview-cell {
+       min-width: 0;
+       padding: 11px 12px;
+       background: rgba(255,255,255,0.82);
+     }
+     .project-overview-cell small {
+       display: block;
+       color: #a095aa;
+       font-size: 8px;
+       line-height: 1;
+       font-weight: 800;
+       letter-spacing: 0.09em;
+       text-transform: uppercase;
+     }
+     .project-overview-cell strong {
+       display: block;
+       overflow: hidden;
+       margin-top: 6px;
+       color: #36223f;
+       font-size: 10px;
+       line-height: 1.2;
+       font-weight: 800;
+       text-overflow: ellipsis;
+       white-space: nowrap;
+     }
+     .project-timeline {
+       position: relative;
+       padding: 13px 13px 13px 14px;
+     }
+     .project-timeline-rail {
+       position: absolute;
+       top: 26px;
+       bottom: 26px;
+       left: 25px;
+       width: 2px;
+       overflow: hidden;
+       border-radius: 999px;
+       background: #eee8f3;
+     }
+     .project-timeline-rail span {
+       display: block;
+       width: 100%;
+       border-radius: inherit;
+       background: linear-gradient(180deg, #a855f7, #7c3aed);
+       transition: height 0.4s cubic-bezier(0.2,0.8,0.4,1);
+     }
+     .project-stage {
+       position: relative;
+       display: flex;
+       align-items: center;
+       min-height: 32px;
+       gap: 10px;
+     }
+     .project-stage + .project-stage { margin-top: 3px; }
+     .project-stage-dot {
+       z-index: 1;
+       display: inline-flex;
+       width: 23px;
+       height: 23px;
+       flex: 0 0 23px;
+       align-items: center;
+       justify-content: center;
+       border-radius: 999px;
+       color: #afa4b8;
+       background: #f2edf5;
+     }
+     .project-stage-dot svg {
+       width: 12px;
+       height: 12px;
+       stroke-width: 2.7;
+     }
+     .project-stage-label {
+       color: #a297ac;
+       font-size: 10px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-stage-meta {
+       margin-left: auto;
+       color: #b0a5b8;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 700;
+     }
+     .project-stage.is-complete .project-stage-dot {
+       color: white;
+       background: #8b5bd6;
+     }
+     .project-stage.is-complete .project-stage-label {
+       color: #6b4b84;
+     }
+     .project-stage.is-current .project-stage-dot {
+       color: white;
+       background: #5b21b6;
+       box-shadow: 0 0 0 4px #e9ddfb;
+     }
+     .project-stage.is-current .project-stage-label {
+       color: #351058;
+       font-weight: 800;
+     }
+     .project-stage.is-current .project-stage-meta {
+       color: #7c3aed;
+       font-weight: 800;
+     }
+     .project-info-grid {
+       display: grid;
+       grid-template-columns: repeat(2, minmax(0, 1fr));
+       gap: 9px;
+     }
+     .project-info-section {
+       min-width: 0;
+       padding: 12px;
+       border-radius: 16px;
+       background: rgba(255,255,255,0.76);
+       box-shadow: 0 7px 18px rgba(73, 42, 104, 0.045);
+     }
+     .project-info-section.is-wide { grid-column: 1 / -1; }
+     .project-info-title {
+       display: flex;
+       align-items: center;
+       gap: 6px;
+       color: #35223f;
+       font-size: 10px;
+       line-height: 1;
+       font-weight: 800;
+     }
+     .project-info-title svg {
+       width: 13px;
+       height: 13px;
+       color: #7c3aed;
+       stroke-width: 2.2;
+     }
+     .project-info-copy {
+       margin-top: 8px;
+       color: #756a80;
+       font-size: 10px;
+       line-height: 1.45;
+     }
+     .project-file-list {
+       display: grid;
+       gap: 7px;
+       margin-top: 9px;
+     }
+     .project-file {
+       display: flex;
+       min-width: 0;
+       align-items: center;
+       gap: 7px;
+       color: #6b5d77;
+       font-size: 9px;
+       line-height: 1.2;
+       font-weight: 700;
+     }
+     .project-file svg {
+       width: 13px;
+       height: 13px;
+       flex: 0 0 13px;
+       color: #9a6cda;
+     }
+     .project-file span {
+       overflow: hidden;
+       text-overflow: ellipsis;
+       white-space: nowrap;
+     }
+     .project-file small {
+       margin-left: auto;
+       color: #aaa0b0;
+       font-size: 8px;
+       font-weight: 700;
+     }
+     .project-action {
+       display: inline-flex;
+       align-items: center;
+       gap: 5px;
+       margin-top: 9px;
+       padding: 7px 9px;
+       border-radius: 999px;
+       color: white;
+       background: #32105c;
+       font-size: 9px;
+       line-height: 1;
+       font-weight: 800;
+       transition: transform 0.16s ease, background-color 0.16s ease;
+     }
+     .project-action:hover { background: #4c1d95; }
+     .project-action:active { transform: scale(0.97); }
+     .project-action svg { width: 12px; height: 12px; }
+     @media (max-width: 350px) {
+       .project-status { padding-left: 6px; padding-right: 6px; }
+       .project-status::before { display: none; }
+       .project-info-grid { grid-template-columns: 1fr; }
+       .project-info-section.is-wide { grid-column: auto; }
+     }
+
+    /* =========================================================
+        3. ONE CONTINUOUS TOP HEADER SURFACE
+       ========================================================= */
+    #top-nav {
+      height: 74px;
+      min-height: 74px;
+      transition: background-color 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+                  box-shadow 0.28s cubic-bezier(0.32, 0.72, 0, 1);
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      overflow: hidden;
+    }
+    .header-panel {
+      position: absolute;
+      inset: 0;
+      display: flex !important;
+      visibility: hidden;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: opacity 0.24s cubic-bezier(0.32, 0.72, 0, 1),
+                  transform 0.28s cubic-bezier(0.32, 0.72, 0, 1),
+                  visibility 0s linear 0.28s;
+      width: 100%;
+      will-change: opacity, transform;
+    }
+    .header-panel.panel-hidden {
+      opacity: 0;
+      transform: translateY(10px);
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .header-panel.panel-active {
+      opacity: 1;
+      transform: translateY(0);
+      visibility: visible;
+      pointer-events: auto;
+      transition-delay: 0s;
+    }
+</style>
+</head>
+<body class="text-slate-900 antialiased selection:bg-brand-200">
+<div class="app-screen pb-28" id="main-app-screen">
+<!-- =========================================================
+       UNIFIED MORPHING TOP NAVIGATION (NEVER TWO BARS STACKED)
+       State 1: Standard HAVCAN Header (Home / Orders / Profile)
+       State 2: Minimal Light-Purple Search Header (No border / No extra button / Auto-focused)
+       State 3: Conversation Header (Chat View with Lead info & Back)
+       ========================================================= -->
+<header class="bg-[#F4EFFB] border-b border-purple-200/80 shadow-xs" id="top-nav">
+<!-- STATE 1: STANDARD BRAND HEADER -->
+<div class="header-panel panel-active px-4 py-3 items-center justify-between" id="top-nav-standard">
+<div class="flex items-center space-x-2.5 cursor-pointer btn-press" onclick="navigateTo('home')">
+<div class="w-10 h-10 rounded-xl bg-white flex items-center justify-center p-1.5 border border-purple-200 shadow-xs">
+<img alt="HAVCAN" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrkGpAAXYgqmiPJT59rNcAhrsCWZnwgrtrQ2Hr5F6cXr7BDxw-tzwFtX8xHYQOhBSiR-RGXy9DQxv22YeEX4gN9YtPoDKfm7whDsFXJFWBj6VtKAH6nFUFJFtI8jaeANLQ-DvBbux1apaMbaS_ks5iS4PPiH1_D-NIUVGdXccO9PRUtbTSNAlmXQyyHI9Uyj1Irhm1MTUUfpt0OwqinuTWiSzbE-1R7UmhaRPH8wM-AbnYV6hY-Ch81Bv9zAv51pJJaw"/>
+</div>
+<div>
+<div class="flex items-center space-x-1.5 leading-tight">
+<span class="font-extrabold text-base tracking-tight text-slate-950">HAVCAN</span>
+<span class="text-[9px] font-extrabold bg-purple-200/90 text-purple-900 px-1.5 py-0.5 rounded uppercase tracking-wider" id="role-tag-badge">MANAGED</span>
+</div>
+<p class="text-[10px] text-purple-900/80 font-semibold leading-tight mt-0.5">Have Work. Can Do It.</p>
+</div>
+</div>
+<div class="flex items-center space-x-2">
+<button class="btn-press text-xs font-bold px-3 py-1.5 rounded-full bg-white/90 border border-purple-200 flex items-center space-x-1.5 text-slate-800 shadow-2xs hover:bg-white" id="auth-status-pill" onclick="navigateTo('profile')">
+<span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+<span class="capitalize" id="header-user-label">Client</span>
+</button>
+<button aria-label="Toggle Menu" class="btn-press w-9 h-9 rounded-xl bg-white border border-purple-200/90 flex flex-col items-center justify-center space-y-1 text-slate-800 shadow-2xs hover:bg-purple-50 focus:outline-none" id="menu-hamburger-btn" onclick="toggleTopMenu()">
+<span class="w-4 h-0.5 bg-slate-900 rounded-full"></span>
+<span class="w-4 h-0.5 bg-slate-900 rounded-full"></span>
+<span class="w-4 h-0.5 bg-slate-900 rounded-full"></span>
+</button>
+</div>
+</div>
+<!-- STATE 2: MINIMAL LIGHT-PURPLE SEARCH BAR HEADER (NO STROKE / NO EXTRA BUTTON) -->
+<div class="header-panel panel-hidden px-3.5 py-2.5 items-center" id="top-nav-search">
+<div class="relative w-full flex items-center bg-[#EDE4F8] rounded-2xl h-12 shadow-none transition-all duration-200">
+<!-- Back Arrow directly inside input left edge -->
+<button aria-label="Exit Search" class="btn-press pl-3.5 pr-2 h-full flex items-center justify-center text-purple-900 hover:text-purple-950 focus:outline-none flex-shrink-0" onclick="exitSearchMode()" title="Back">
+<i class="w-5 h-5 stroke-[2.2]" data-lucide="arrow-left"></i>
+</button>
+<!-- Search Input with light purple fill, borderless, clean styling -->
+<input autocomplete="off" class="w-full bg-transparent border-0 outline-none ring-0 focus:ring-0 focus:border-0 text-[13px] font-semibold text-slate-900 placeholder:text-purple-900/45 py-2 pr-10 pl-1 leading-normal" id="global-search-input" oninput="handleSearchInputChange(this.value)" onkeydown="handleSearchKeydown(event)" placeholder="Search HAVCAN services..." type="text"/>
+<!-- Integrated Clear button inside right -->
+<button aria-label="Clear Search" class="hidden absolute right-3 w-6 h-6 rounded-full bg-purple-200/70 hover:bg-purple-300 text-purple-900 flex items-center justify-center btn-press transition-colors" id="search-clear-btn" onclick="clearSearchInput()">
+<i class="w-3.5 h-3.5 stroke-[2.5]" data-lucide="x"></i>
+</button>
+</div>
+</div>
+<!-- STATE 3: MORPHED CONVERSATION HEADER (Chat View) -->
+<div class="header-panel panel-hidden px-3.5 py-2.5 items-center justify-between" id="top-nav-chat">
+<div class="flex items-center space-x-2.5 overflow-hidden">
+<button aria-label="Back" class="btn-press w-8 h-8 rounded-xl bg-white border border-purple-200 flex items-center justify-center text-slate-800 shadow-2xs hover:bg-purple-50 flex-shrink-0" onclick="goBack()">
+<i class="w-4 h-4" data-lucide="arrow-left"></i>
+</button>
+<div class="relative flex-shrink-0">
+<div class="w-8 h-8 rounded-full bg-white border border-purple-300 flex items-center justify-center p-1 shadow-2xs overflow-hidden">
+<img alt="HAVCAN Team" class="w-full h-full object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrkGpAAXYgqmiPJT59rNcAhrsCWZnwgrtrQ2Hr5F6cXr7BDxw-tzwFtX8xHYQOhBSiR-RGXy9DQxv22YeEX4gN9YtPoDKfm7whDsFXJFWBj6VtKAH6nFUFJFtI8jaeANLQ-DvBbux1apaMbaS_ks5iS4PPiH1_D-NIUVGdXccO9PRUtbTSNAlmXQyyHI9Uyj1Irhm1MTUUfpt0OwqinuTWiSzbE-1R7UmhaRPH8wM-AbnYV6hY-Ch81Bv9zAv51pJJaw"/>
+</div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border-2 border-white"></span>
+</div>
+<div class="min-w-0 pr-1 cursor-pointer" onclick="handleWhatsAppHeaderTap()">
+<div class="flex items-center space-x-1">
+<h2 class="font-extrabold text-xs text-slate-950 truncate" id="chat-header-title">HAVCAN Creative Lead</h2>
+<i class="w-3.5 h-3.5 text-accent flex-shrink-0" data-lucide="badge-check"></i>
+</div>
+<p class="text-[10px] text-purple-900 font-semibold truncate leading-tight mt-0.5" id="chat-header-subtitle">Direct Lead • Active Supervision</p>
+</div>
+</div>
+<div class="flex items-center space-x-1.5 flex-shrink-0">
+<a class="btn-press px-2.5 py-1.5 rounded-xl bg-emerald-50 border border-emerald-300 text-emerald-800 text-[11px] font-bold flex items-center space-x-1 shadow-2xs hover:bg-emerald-100" href="#" onclick="navigateTo('chat'); return false;" title="Direct WhatsApp">
+<i class="w-3 h-3 text-emerald-600" data-lucide="phone"></i>
+<span class="hidden xs:inline">WhatsApp</span>
+</a>
+<button class="btn-press w-8 h-8 rounded-xl bg-white border border-purple-200 text-slate-700 flex items-center justify-center shadow-2xs hover:bg-purple-50" id="chat-order-btn" onclick="handleWhatsAppOrderDetailsClick()" title="Order Details">
+<i class="w-3.5 h-3.5 text-purple-800" data-lucide="layers"></i>
+</button>
+</div>
+</div>
+</header>
+<!-- MAIN APP CONTENT AREA -->
+<main class="flex-1 overflow-y-auto px-4 py-3.5 space-y-5 view-anim" id="app-view">
+</main>
+<!-- =========================================================
+       1. SOLID BLACK BOTTOM NAVIGATION DOCK (ENLARGED & FLUID)
+       Comfortable height, accessible touch targets, continuous morphing
+       ========================================================= -->
+<div class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[420px] z-40 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-2 pointer-events-none transition-all duration-300" id="standard-bottom-bar-shell">
+<nav class="pointer-events-auto relative w-full nav-compact flex items-center justify-between" id="bottom-bar-container" onmouseenter="expandNavBar()" onmouseleave="delayedCollapseNavBar()">
+<div id="nav-capsule"></div>
+<button class="nav-btn is-active flex-1 flex flex-col items-center justify-center py-2 px-1 text-zinc-400 group cursor-pointer" data-index="0" data-route="home" onpointerdown="handleNavPointerDown(0, event)" onclick="handleNavClick('home', 0)">
+<i class="nav-icon w-[22px] h-[22px]" data-lucide="home"></i>
+<span class="nav-text text-[11px] mt-1 tracking-tight">Home</span>
+</button>
+<button class="nav-btn flex-1 flex flex-col items-center justify-center py-2 px-1 text-zinc-400 group cursor-pointer" data-index="1" data-route="search" onpointerdown="handleNavPointerDown(1, event)" onclick="handleNavClick('search', 1)">
+<i class="nav-icon w-[22px] h-[22px]" data-lucide="search"></i>
+<span class="nav-text text-[11px] mt-1 tracking-tight">Search</span>
+</button>
+<button class="nav-btn flex-1 flex flex-col items-center justify-center py-2 px-1 text-zinc-400 group cursor-pointer" data-index="2" data-route="orders" onpointerdown="handleNavPointerDown(2, event)" onclick="handleNavClick('orders', 2)">
+<div class="relative flex items-center justify-center">
+<i class="nav-icon w-[22px] h-[22px]" data-lucide="shopping-bag"></i>
+<span class="hidden absolute -top-1 -right-1.5 w-2 h-2 rounded-full bg-purple-500" id="orders-nav-dot"></span>
+</div>
+<span class="nav-text text-[11px] mt-1 tracking-tight">Orders</span>
+</button>
+<button class="nav-btn flex-1 flex flex-col items-center justify-center py-2 px-1 text-zinc-400 group cursor-pointer" data-index="3" data-route="chat" onpointerdown="handleNavPointerDown(3, event)" onclick="handleNavClick('chat', 3)">
+<div class="relative flex items-center justify-center">
+<i class="nav-icon w-[22px] h-[22px]" data-lucide="message-square"></i>
+</div>
+<span class="nav-text text-[11px] mt-1 tracking-tight">WhatsApp</span>
+</button>
+<button class="nav-btn flex-1 flex flex-col items-center justify-center py-2 px-1 text-zinc-400 group cursor-pointer" data-index="4" data-route="profile" onpointerdown="handleNavPointerDown(4, event)" onclick="handleNavClick('profile', 4)">
+<i class="nav-icon w-[22px] h-[22px]" data-lucide="user"></i>
+<span class="nav-text text-[11px] mt-1 tracking-tight">Profile</span>
+</button>
+</nav>
+</div>
+<!-- FULL-SCREEN PHOTO VIEWER MODAL (shared by showcase and WhatsApp media) -->
+<div class="viewer-hidden fixed inset-0 z-50 bg-black/95 backdrop-blur-md flex flex-col justify-between p-4" id="photo-viewer-modal">
+<div class="flex items-center justify-between z-10 pt-2 px-1">
+<button aria-label="Close Viewer" class="btn-press w-9 h-9 rounded-full bg-zinc-900/90 text-white border border-zinc-700 flex items-center justify-center" onclick="closePhotoViewer()">
+<i class="w-5 h-5" data-lucide="x"></i>
+</button>
+<div class="flex items-center space-x-2">
+<button class="btn-press w-9 h-9 rounded-full bg-zinc-900/90 text-white border border-zinc-700 flex items-center justify-center" id="viewer-share-btn" onclick="shareCurrentPhoto()" title="Share Photo">
+<i class="w-4 h-4" data-lucide="share-2"></i>
+</button>
+<a class="btn-press w-9 h-9 rounded-full bg-accent text-white flex items-center justify-center" download="havcan_image.jpg" href="#" id="viewer-download-link" title="Save / Download">
+<i class="w-4 h-4" data-lucide="download"></i>
+</a>
+</div>
+</div>
+<div class="flex-1 flex items-center justify-center overflow-hidden p-2 relative" id="photo-zoom-container">
+<img alt="HAVCAN Photo" class="max-w-full max-h-[85vh] object-contain select-none transition-transform duration-200 cursor-zoom-in" id="photo-viewer-img" onclick="togglePhotoZoom()" src=""/>
+</div>
+<div class="text-center pb-3 text-zinc-400 text-xs font-semibold">
+<span id="photo-viewer-caption">Tap image to toggle 2x zoom</span>
+</div>
+</div>
+<!-- TOAST NOTIFICATION -->
+<div class="fixed top-5 left-1/2 -translate-x-1/2 z-50 transition-all duration-300 transform -translate-y-24 opacity-0 pointer-events-none max-w-xs w-full px-4" id="app-toast">
+<div class="bg-[#000000] text-white px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-2.5 text-xs font-semibold border border-zinc-800">
+<i class="w-4 h-4 text-purple-400 flex-shrink-0" data-lucide="check-circle" id="toast-icon"></i>
+<span id="toast-msg">Action completed</span>
+</div>
+</div>
+<!-- FULL-SCREEN SERVICE-SCOPED SHOWCASE VIEWER -->
+<div aria-label="Showcase viewer" aria-modal="true" class="showcase-viewer-hidden" id="showcase-viewer" role="dialog">
+<div id="showcase-viewer-shell">
+<div class="flex items-center justify-between px-4 py-3 border-b border-purple-100/80 bg-[#F4EFFB] flex-shrink-0">
+<button aria-label="Back to services" class="showcase-back-button btn-press w-11 h-11 rounded-full bg-transparent border-0 text-slate-700 flex items-center justify-center shadow-none" onclick="closeShowcaseViewer()" title="Back">
+<i class="w-5 h-5" data-lucide="arrow-left"></i>
+</button>
+<div class="min-w-0 text-center px-3">
+<p class="text-[9px] uppercase tracking-[0.16em] font-extrabold text-purple-700">Showcase</p>
+<h2 class="text-sm font-extrabold text-slate-950 truncate" id="showcase-viewer-title">HAVCAN Showcase</h2>
+</div>
+<span class="text-[10px] font-bold text-purple-900 bg-purple-100 px-2 py-1 rounded-full whitespace-nowrap" id="showcase-viewer-count">1 / 1</span>
+</div>
+<div id="showcase-track-viewport">
+<div id="showcase-track"></div>
+</div>
+<div id="showcase-details-scroll">
+<div id="showcase-static-details"></div>
+</div>
+<div class="absolute left-0 right-0 bottom-0 pointer-events-none px-4 pb-4 flex items-end justify-between">
+<div class="pointer-events-auto rounded-full bg-white/90 backdrop-blur-sm border border-purple-100 px-3 py-1.5 shadow-2xs text-[10px] font-bold text-purple-900" id="showcase-viewer-hint">
+Swipe for related work
+</div>
+</div>
+<button aria-label="WhatsApp about this showcase" class="btn-press" id="showcase-chat-fab" onclick="openChatFromShowcase()" title="Open WhatsApp">
+<img alt="HAVCAN" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrkGpAAXYgqmiPJT59rNcAhrsCWZnwgrtrQ2Hr5F6cXr7BDxw-tzwFtX8xHYQOhBSiR-RGXy9DQxv22YeEX4gN9YtPoDKfm7whDsFXJFWBj6VtKAH6nFUFJFtI8jaeANLQ-DvBbux1apaMbaS_ks5iS4PPiH1_D-NIUVGdXccO9PRUtbTSNAlmXQyyHI9Uyj1Irhm1MTUUfpt0OwqinuTWiSzbE-1R7UmhaRPH8wM-AbnYV6hY-Ch81Bv9zAv51pJJaw"/>
+<span>WhatsApp</span>
+</button>
+</div>
+</div>
+</div>
+<script>
+    // =========================================================
+    // 4. COMPLETE 10-SERVICE HAVCAN CATALOGUE WITH CONFIRMED ₹ PRICES
+    // =========================================================
+    const REAL_SERVICES = [
+      {
+        id: 'srv-1',
+        title: 'Logo & Brand Identity',
+        category: 'Design',
+        price: '₹799',
+        priceNum: 799,
+        delivery: '2 Days',
+        tags: ['logo', 'brand', 'identity', 'brand identity', 'vector', 'brandmark', 'minimalist'],
+        shortDesc: 'Custom vector logo marks, color systems, typography pairings and brand guide.',
+        fullDesc: 'HAVCAN creative leads direct an elite brand designer to craft an adaptable, modern visual identity prepared for high-impact commercial use.',
+        image: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-2',
+        title: 'Website Design & Development',
+        category: 'Development',
+        price: '₹2,499',
+        priceNum: 2499,
+        delivery: '3-5 Days',
+        tags: ['web', 'website', 'landing page', 'ui', 'ux', 'web design', 'figma', 'development', 'frontend'],
+        shortDesc: 'Mobile-first Figma UX/UI with interactive sections and launch-ready code.',
+        fullDesc: 'Engineered for conversion clarity. Designed in Figma with clean component tokens, responsive mobile architecture, and modern code.',
+        image: 'https://images.unsplash.com/photo-1507238691740-187a5b1d37b8?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-3',
+        title: 'Video Editing',
+        category: 'Video',
+        price: '₹999',
+        priceNum: 999,
+        delivery: '24 Hours',
+        tags: ['video', 'editing', 'reels', 'shorts', 'tiktok', 'vlog', 'clips', 'cut'],
+        shortDesc: 'Dynamic captions, b-roll sync, SFX, and pacing for Reels, YouTube & Shorts.',
+        fullDesc: 'Transform raw footage or podcasts into high-retention vertical or widescreen clips formatted with custom kinetic typography and soundscapes.',
+        image: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-4',
+        title: 'Ad / Promotional Video',
+        category: 'Video',
+        price: '₹1,499',
+        priceNum: 1499,
+        delivery: '2 Days',
+        tags: ['ad', 'promotional', 'promo', 'video', 'commercial', 'product ad', 'meta ad', 'motion'],
+        shortDesc: 'Broadcast-quality 30-60s motion graphic ads for Meta, Instagram & YouTube marketing.',
+        fullDesc: 'Drive conversions with energetic motion graphics, 3D element choreography, and product showcase animations crafted by our motion leads.',
+        image: 'https://images.unsplash.com/photo-1492691527719-9d1e07e534b4?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-5',
+        title: 'Thumbnail Design',
+        category: 'Design',
+        price: '₹299',
+        priceNum: 299,
+        delivery: '24 Hours',
+        tags: ['thumbnail', 'thumb', 'youtube', 'cover', 'ctr', 'banner', 'click'],
+        shortDesc: 'High CTR thumbnail concepts with bold typography, cutouts and color theory.',
+        fullDesc: 'Engineered specifically for CTR optimization in competitive feeds. High contrast, mobile-readable typography, and crisp facial retouches.',
+        image: 'https://images.unsplash.com/photo-1611162617213-7d7a39e9b1d7?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-6',
+        title: 'Poster / Social Media Creative',
+        category: 'Design',
+        price: '₹399',
+        priceNum: 399,
+        delivery: '24 Hours',
+        tags: ['poster', 'social media', 'flyer', 'creative', 'post', 'instagram', 'banner', 'graphics'],
+        shortDesc: 'Eye-catching social media posters, event banners, and promotional flyers.',
+        fullDesc: 'Custom visual storytelling tailored to your brand identity for Instagram, LinkedIn, and print materials with polished aesthetic standards.',
+        image: 'https://images.unsplash.com/photo-1542744094-3a31f272c490?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-7',
+        title: 'Educational PPT',
+        category: 'Presentation',
+        price: '₹499',
+        priceNum: 499,
+        delivery: '24 Hours',
+        tags: ['ppt', 'educational', 'slides', 'presentation', 'academic', 'powerpoint', 'course', 'lecture'],
+        shortDesc: 'Clean, structured slides, visual diagrams, and simplified lesson materials.',
+        fullDesc: 'Structured presentations for educators, speakers, and course creators designed to maximize learner comprehension and retention.',
+        image: 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-8',
+        title: 'Portfolio Website',
+        category: 'Development',
+        price: '₹1,999',
+        priceNum: 1999,
+        delivery: '3 Days',
+        tags: ['portfolio', 'website', 'personal site', 'showcase', 'resume', 'web', 'cv'],
+        shortDesc: 'Sleek personal portfolio to showcase creative work, case studies, and projects.',
+        fullDesc: 'Modern responsive showcase website designed with smooth micro-interactions, resume downloads, and high-impact project spotlights.',
+        image: 'https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-9',
+        title: 'Presentation Design',
+        category: 'Presentation',
+        price: '₹899',
+        priceNum: 899,
+        delivery: '2 Days',
+        tags: ['presentation', 'pitch deck', 'keynote', 'investor', 'deck', 'slides', 'corporate'],
+        shortDesc: 'Compelling executive slides, custom infographics and structured narrative flow.',
+        fullDesc: 'We turn fragmented talking points into investor-ready presentations structured for concise visual communication and executive reviews.',
+        image: 'https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&auto=format&fit=crop&q=80'
+      },
+      {
+        id: 'srv-10',
+        title: 'Creative Design',
+        category: 'Design',
+        price: '₹699',
+        priceNum: 699,
+        delivery: '2 Days',
+        tags: ['creative', 'design', 'illustration', 'art', 'vector', 'custom design', 'graphic'],
+        shortDesc: 'Bespoke illustrations, custom iconography, and bespoke graphic assets.',
+        fullDesc: 'Custom digital design assets tailored for product interfaces, merchandise, marketing collaterals, and digital campaigns.',
+        image: 'https://images.unsplash.com/photo-1581291518633-83b4ebd1d83e?w=800&auto=format&fit=crop&q=80'
+      }
+    ];
+
+    // Each related showcase is explicitly tied to one catalogue service.
+    // This prevents a Logo showcase from ever surfacing Thumbnail, Website,
+    // or another unrelated category as related work.
+    const SHOWCASE_WORK = REAL_SERVICES.flatMap(srv => [
+      {
+        id: `${srv.id}-showcase-1`,
+        serviceId: srv.id,
+        title: `${srv.title} — Signature Direction`,
+        image: srv.image,
+        blurb: srv.shortDesc
+      },
+      {
+        id: `${srv.id}-showcase-2`,
+        serviceId: srv.id,
+        title: `${srv.title} — Managed Delivery`,
+        image: srv.image,
+        blurb: srv.fullDesc
+      }
+    ]);
+
+    const REAL_PEOPLE = [
+      { id: 'p-1', name: 'Marcus Vance', role: 'Senior Creative Lead', category: 'Creative Direction', avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80' },
+      { id: 'p-2', name: 'Elena Rostova', role: 'Brand & Typography Director', category: 'Design', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?w=200&auto=format&fit=crop&q=80' },
+      { id: 'p-3', name: 'Devon Wright', role: 'Motion & Video Producer', category: 'Video', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=80' }
+    ];
+
+    function getStored(key, fallback) {
+      try {
+        const item = localStorage.getItem('havcan_v8_' + key) || localStorage.getItem('havcan_v7_' + key);
+        return item ? JSON.parse(item) : fallback;
+      } catch (e) {
+        return fallback;
+      }
+    }
+    function setStored(key, val) {
+      try {
+        localStorage.setItem('havcan_v8_' + key, JSON.stringify(val));
+      } catch (e) {}
+    }
+
+    const SEED_ORDERS = [
+      {
+        id: 'HC-8421',
+        serviceTitle: 'Logo & Brand Identity',
+        serviceId: 'srv-1',
+        status: 'In Progress',
+        deadline: '2 Days',
+        price: '₹799',
+        requirements: 'Minimalist tech mark for AI startup called Apex. Prefer deep violet and silver accents.',
+        createdAt: 'Today'
+      }
+    ];
+
+    let state = {
+      services: REAL_SERVICES,
+      orders: getStored('orders', SEED_ORDERS),
+      people: REAL_PEOPLE,
+      // REAL search history only — starts empty unless user searched
+      recentSearches: getStored('recentSearches', []),
+      recentlyViewedShowcases: getStored('recentlyViewedShowcases', []),
+      currentRoute: 'home',
+      previousRoute: 'home',
+      searchQuery: '',
+      navActiveIndex: 0,
+      navTapIndex: null,
+      activeOrderId: 'HC-8421',
+      currentUser: {
+        id: 'client',
+        name: 'Alex Morgan',
+        role: 'Client',
+        email: 'alex@example.com'
+      },
+      whatsappContextServiceId: null,
+      whatsappContextShowcaseId: null,
+      showcaseViewer: {
+        serviceId: null,
+        items: [],
+        activeIndex: 0
+      },
+      currentViewerPhotoUrl: null,
+      isPhotoZoomed: false,
+      whatsapp: {
+        status: null,
+        conversations: [],
+        messages: [],
+        activeConversationId: null,
+        loading: false,
+        messagesLoading: false,
+        error: null,
+        pollTimer: null,
+        messagePollTimer: null
+      }
+    };
+
+    function saveState() {
+      setStored('orders', state.orders);
+      setStored('recentSearches', state.recentSearches);
+      setStored('recentlyViewedShowcases', state.recentlyViewedShowcases);
+    }
+
+    function showToast(message, icon = 'check-circle') {
+      const toast = document.getElementById('app-toast');
+      const toastMsg = document.getElementById('toast-msg');
+      const toastIcon = document.getElementById('toast-icon');
+      if (!toast) return;
+      toastMsg.innerText = message;
+      toastIcon.setAttribute('data-lucide', icon);
+      lucide.createIcons();
+      toast.classList.remove('-translate-y-24', 'opacity-0', 'pointer-events-none');
+      toast.classList.add('translate-y-0', 'opacity-100');
+      setTimeout(() => {
+        toast.classList.add('-translate-y-24', 'opacity-0', 'pointer-events-none');
+        toast.classList.remove('translate-y-0', 'opacity-100');
+      }, 2200);
+    }
+
+    function toggleTopMenu() {
+      showToast('HAVCAN Managed Platform v8.0');
+    }
+
+    // =========================================================
+    // 2. SEARCH PAGE OPEN & CLOSE ANIMATION (SEAMLESS HEADER MORPH)
+    // =========================================================
+    function syncTopHeaderMorph() {
+      const standardHeader = document.getElementById('top-nav-standard');
+      const searchHeader = document.getElementById('top-nav-search');
+      const chatHeader = document.getElementById('top-nav-chat');
+      const titleEl = document.getElementById('chat-header-title');
+      const subtitleEl = document.getElementById('chat-header-subtitle');
+      const appScreen = document.getElementById('main-app-screen');
+
+      const isChat = state.currentRoute === 'chat';
+      const isSearch = state.currentRoute === 'search';
+
+      // Hide panels smoothly
+      [standardHeader, searchHeader, chatHeader].forEach(panel => {
+        if (panel) {
+          panel.classList.remove('panel-active');
+          panel.classList.add('panel-hidden');
+        }
+      });
+
+      if (isChat) {
+        document.body.classList.add('in-chat-mode');
+        if (appScreen) appScreen.classList.add('chat-viewport-locked');
+        if (chatHeader) {
+          chatHeader.classList.remove('panel-hidden');
+          chatHeader.classList.add('panel-active');
+        }
+        const activeOrder = state.orders.find(o => o.id === state.activeOrderId) || state.orders[0];
+        if (activeOrder && titleEl && subtitleEl) {
+          titleEl.innerText = activeOrder.serviceTitle ? `HAVCAN • ${activeOrder.serviceTitle}` : 'HAVCAN Creative Lead';
+          subtitleEl.innerText = `Supervised • Order #${activeOrder.id} (${activeOrder.status})`;
+        }
+      } else if (isSearch) {
+        document.body.classList.remove('in-chat-mode');
+        if (appScreen) appScreen.classList.remove('chat-viewport-locked');
+        if (searchHeader) {
+          searchHeader.classList.remove('panel-hidden');
+          searchHeader.classList.add('panel-active');
+        }
+        const input = document.getElementById('global-search-input');
+        if (input) {
+          input.value = state.searchQuery;
+          const clearBtn = document.getElementById('search-clear-btn');
+          if (clearBtn) clearBtn.classList.toggle('hidden', !state.searchQuery);
+          // Auto-focus immediately without jumping
+          setTimeout(() => {
+            input.focus();
+            if (input.setSelectionRange) {
+              const len = input.value.length;
+              input.setSelectionRange(len, len);
+            }
+          }, 60);
+        }
+      } else {
+        document.body.classList.remove('in-chat-mode');
+        if (appScreen) appScreen.classList.remove('chat-viewport-locked');
+        if (standardHeader) {
+          standardHeader.classList.remove('panel-hidden');
+          standardHeader.classList.add('panel-active');
+        }
+      }
+    }
+
+    function exitSearchMode() {
+      const input = document.getElementById('global-search-input');
+      if (input) input.blur();
+      if (state.previousRoute && state.previousRoute !== 'search') {
+        navigateTo(state.previousRoute);
+      } else {
+        navigateTo('home');
+      }
+    }
+
+    function clearSearchInput() {
+      state.searchQuery = '';
+      const input = document.getElementById('global-search-input');
+      if (input) {
+        input.value = '';
+        input.focus();
+      }
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.classList.add('hidden');
+      renderApp();
+    }
+
+    function handleSearchInputChange(val) {
+      state.searchQuery = val;
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.classList.toggle('hidden', !val.trim());
+
+      renderApp();
+    }
+
+    function recordSearchQuery(query = state.searchQuery) {
+      const trimmed = (query || '').trim();
+      if (!trimmed) return;
+      state.recentSearches = [
+        trimmed,
+        ...state.recentSearches.filter(item => item.toLowerCase() !== trimmed.toLowerCase())
+      ].slice(0, 6);
+      saveState();
+    }
+
+    function handleSearchKeydown(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        recordSearchQuery();
+        renderApp();
+      }
+    }
+
+    function applyRecentSearch(item) {
+      state.searchQuery = item;
+      const input = document.getElementById('global-search-input');
+      if (input) {
+        input.value = item;
+        input.focus();
+      }
+      const clearBtn = document.getElementById('search-clear-btn');
+      if (clearBtn) clearBtn.classList.remove('hidden');
+      renderApp();
+    }
+
+    function applyRecentSearchByIndex(index) {
+      const item = state.recentSearches[index];
+      if (item) applyRecentSearch(item);
+    }
+
+    function removeRecentSearchItem(item, e) {
+      if (e) e.stopPropagation();
+      state.recentSearches = state.recentSearches.filter(s => s !== item);
+      saveState();
+      renderApp();
+    }
+
+    function removeRecentSearchByIndex(index, e) {
+      if (e) e.stopPropagation();
+      if (index < 0 || index >= state.recentSearches.length) return;
+      state.recentSearches.splice(index, 1);
+      saveState();
+      renderApp();
+    }
+
+    function clearAllSearchHistory() {
+      state.recentSearches = [];
+      saveState();
+      renderApp();
+      showToast('Search history cleared');
+    }
+
+    function handleWhatsAppHeaderTap() {
+      const activeOrder = state.orders.find(o => o.id === state.activeOrderId) || state.orders[0];
+      if (activeOrder) navigateTo('order-detail', activeOrder.id);
+    }
+    function handleWhatsAppOrderDetailsClick() {
+      const activeOrder = state.orders.find(o => o.id === state.activeOrderId) || state.orders[0];
+      if (activeOrder) navigateTo('order-detail', activeOrder.id);
+    }
+
+    // A single point-origin ripple keeps tap feedback attached to the control
+    // that was actually touched, including nav icons and showcase actions.
+    function createTapRipple(event) {
+      const target = event.target.closest('button, a, [role="button"], .btn-press');
+      if (!target || target.disabled || target.getAttribute('aria-disabled') === 'true') return;
+      if (target.closest('.nav-btn')) return;
+      const rect = target.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      target.classList.add('has-tap-ripple');
+      const ripple = document.createElement('span');
+      ripple.className = 'tap-ripple';
+      ripple.style.left = `${event.clientX - rect.left}px`;
+      ripple.style.top = `${event.clientY - rect.top}px`;
+      target.appendChild(ripple);
+      window.setTimeout(() => ripple.remove(), 520);
+    }
+
+    function createNavTapGlass(button, event) {
+      if (!button || !event) return;
+      button.querySelector('.nav-tap-glass')?.remove();
+      const rect = button.getBoundingClientRect();
+      const glass = document.createElement('span');
+      glass.className = 'nav-tap-glass';
+      glass.style.left = `${event.clientX - rect.left}px`;
+      glass.style.top = `${event.clientY - rect.top}px`;
+      button.appendChild(glass);
+      window.setTimeout(() => glass.remove(), 700);
+    }
+
+    // =========================================================
+    // 6. NAVIGATION EXPANSION & CIRCULAR/CAPSULE GLASS EFFECT (FIX ROOT CAUSE)
+    // =========================================================
+    function getNavIndexForRoute(route) {
+      if (route === 'home') return 0;
+      if (route === 'search') return 1;
+      if (route === 'orders' || route === 'order-detail') return 2;
+      if (route === 'chat') return 3;
+      if (route === 'profile') return 4;
+      return null;
+    }
+
+    function setNavExpanded(expanded) {
+      const bar = document.getElementById('bottom-bar-container');
+      if (!bar) return;
+      bar.classList.toggle('nav-expanded', expanded);
+      bar.classList.toggle('nav-compact', !expanded);
+      requestAnimationFrame(() => updateBottomBarPosition(true));
+    }
+    function expandNavBar() {
+      const bar = document.getElementById('bottom-bar-container');
+      if (bar && !bar.classList.contains('nav-expanded')) setNavExpanded(true);
+    }
+    function collapseNavBar() {
+      const bar = document.getElementById('bottom-bar-container');
+      if (bar && !bar.classList.contains('nav-compact')) setNavExpanded(false);
+    }
+    let navCollapseTimer = null;
+    function delayedCollapseNavBar(delay = 1800) {
+      if (navCollapseTimer) clearTimeout(navCollapseTimer);
+      navCollapseTimer = setTimeout(collapseNavBar, delay);
+    }
+
+    function handleNavPointerDown(index, event) {
+      state.navActiveIndex = index;
+      createNavTapGlass(document.querySelector(`.nav-btn[data-index="${index}"]`), event);
+      expandNavBar();
+      delayedCollapseNavBar(900);
+      updateBottomBarPosition(true);
+    }
+
+    function handleNavClick(route, index) {
+      state.navActiveIndex = index;
+      state.navTapIndex = index;
+      expandNavBar();
+      navigateTo(route);
+      delayedCollapseNavBar(900);
+    }
+
+    function updateBottomBarPosition(animate = true) {
+      const standardShell = document.getElementById('standard-bottom-bar-shell');
+      const navContainer = document.getElementById('bottom-bar-container');
+      const navButtons = document.querySelectorAll('.nav-btn');
+      const capsule = document.getElementById('nav-capsule');
+      const appScreen = document.getElementById('main-app-screen');
+
+      if (!navContainer || !capsule || navButtons.length === 0) return;
+      if (appScreen) appScreen.classList.toggle('search-layout-hidden', state.currentRoute === 'search');
+
+      if (state.currentRoute === 'chat') {
+        if (standardShell) {
+          standardShell.classList.add('nav-search-hidden');
+          standardShell.style.display = '';
+        }
+        return;
+      } else {
+        if (standardShell) {
+          standardShell.style.display = '';
+          standardShell.classList.toggle('nav-search-hidden', state.currentRoute === 'search');
+        }
+      }
+
+       const activeIndex = Number.isInteger(state.navActiveIndex)
+         ? state.navActiveIndex
+         : (getNavIndexForRoute(state.currentRoute) || 0);
+
+      navButtons.forEach((btn, idx) => {
+        const icon = btn.querySelector('.nav-icon');
+        const text = btn.querySelector('.nav-text');
+        if (idx === activeIndex) {
+          btn.classList.add('is-active', 'text-white');
+          btn.classList.remove('text-zinc-400');
+          if (icon) icon.classList.add('scale-110', 'text-white');
+          if (text) { text.classList.add('font-bold', 'text-white'); text.classList.remove('text-zinc-400'); }
+        } else {
+          btn.classList.remove('is-active', 'text-white');
+          btn.classList.add('text-zinc-400');
+          if (icon) icon.classList.remove('scale-110', 'text-white');
+          if (text) { text.classList.remove('font-bold', 'text-white'); text.classList.add('text-zinc-400'); }
+        }
+      });
+
+      const activeBtn = navButtons[activeIndex];
+      if (activeBtn) {
+        const navRect = navContainer.getBoundingClientRect();
+        const activeRect = activeBtn.getBoundingClientRect();
+        const targetCenterX = (activeRect.left + activeRect.width / 2) - navRect.left;
+         const targetWidth = Math.max(50, Math.min(activeBtn.offsetWidth - 6, 76));
+        const finalLeftOffset = targetCenterX - (targetWidth / 2);
+
+        capsule.style.width = `${targetWidth}px`;
+        capsule.style.transform = `translate3d(${finalLeftOffset}px, 0, 0)`;
+      }
+    }
+
+    function navigateTo(route, param = null) {
+      const wasSearch = state.currentRoute === 'search';
+      if (state.navTapIndex === null) {
+        const routeIndex = getNavIndexForRoute(route);
+        if (routeIndex !== null) state.navActiveIndex = routeIndex;
+      }
+      state.navTapIndex = null;
+      if (state.currentRoute !== route) {
+        state.previousRoute = state.currentRoute;
+      }
+      state.currentRoute = route;
+
+      if (route === 'order-detail' && param) state.activeOrderId = param;
+      if (route === 'chat' && param) state.activeOrderId = param;
+
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      syncTopHeaderMorph();
+      const appView = document.getElementById('app-view');
+      const finishNavigation = () => {
+        renderApp();
+        updateBottomBarPosition(true);
+        const renderedView = document.getElementById('app-view');
+        if (renderedView) {
+          renderedView.classList.remove('search-route-enter', 'search-route-exit');
+          if (route === 'search' && !wasSearch) {
+            requestAnimationFrame(() => renderedView.classList.add('search-route-enter'));
+          }
+        }
+        if (route === 'chat') {
+          setTimeout(scrollWhatsAppMessagesToBottom, 60);
+        }
+      };
+
+      if (wasSearch && route !== 'search' && appView) {
+        appView.classList.remove('search-route-enter');
+        appView.classList.add('search-route-exit');
+        updateBottomBarPosition(true);
+        setTimeout(() => {
+          if (state.currentRoute === route) finishNavigation();
+        }, 200);
+      } else {
+        finishNavigation();
+      }
+    }
+
+    function goBack() {
+      if (state.previousRoute && state.previousRoute !== 'chat') {
+        navigateTo(state.previousRoute);
+      } else {
+        navigateTo('home');
+      }
+    }
+
+    // Shared media viewer used by showcase previews and WhatsApp attachments.
+    function openPhotoViewer(url, caption = '') {
+      state.currentViewerPhotoUrl = url;
+      state.isPhotoZoomed = false;
+
+      const modal = document.getElementById('photo-viewer-modal');
+      const img = document.getElementById('photo-viewer-img');
+      const captionEl = document.getElementById('photo-viewer-caption');
+      const dlLink = document.getElementById('viewer-download-link');
+
+      if (!modal || !img) return;
+
+      img.src = url;
+      img.style.transform = 'scale(1)';
+      img.classList.remove('cursor-zoom-out');
+      img.classList.add('cursor-zoom-in');
+
+      if (captionEl) captionEl.innerText = caption || 'Tap image to toggle 2x zoom';
+      if (dlLink) dlLink.href = url;
+
+      modal.classList.remove('viewer-hidden');
+      modal.classList.add('viewer-active');
+      lucide.createIcons();
+    }
+
+    function closePhotoViewer() {
+      const modal = document.getElementById('photo-viewer-modal');
+      if (modal) {
+        modal.classList.remove('viewer-active');
+        modal.classList.add('viewer-hidden');
+      }
+      state.currentViewerPhotoUrl = null;
+      state.isPhotoZoomed = false;
+    }
+
+    function togglePhotoZoom() {
+      const img = document.getElementById('photo-viewer-img');
+      if (!img) return;
+      state.isPhotoZoomed = !state.isPhotoZoomed;
+      if (state.isPhotoZoomed) {
+        img.style.transform = 'scale(2)';
+        img.classList.remove('cursor-zoom-in');
+        img.classList.add('cursor-zoom-out');
+      } else {
+        img.style.transform = 'scale(1)';
+        img.classList.remove('cursor-zoom-out');
+        img.classList.add('cursor-zoom-in');
+      }
+    }
+
+    function shareCurrentPhoto() {
+      if (!state.currentViewerPhotoUrl) return;
+      if (navigator.share) {
+        navigator.share({
+          title: 'HAVCAN Delivery File',
+          text: 'Check out this photo from HAVCAN',
+          url: state.currentViewerPhotoUrl
+        }).catch(() => {});
+      } else if (navigator.clipboard) {
+        navigator.clipboard.writeText(state.currentViewerPhotoUrl);
+        showToast('Image URL copied to clipboard', 'copy');
+      } else {
+        showToast('Sharing not supported on this browser');
+      }
+    }
+
+    function escapeHtml(text) {
+      if (!text) return '';
+      return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // Highlighting helper for search queries
+    function highlightQueryMatch(text, query) {
+      if (!query) return escapeHtml(text);
+      const escapedQuery = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`(${escapedQuery})`, 'gi');
+      return escapeHtml(text).replace(regex, '<mark class="bg-purple-200 text-purple-950 font-extrabold px-0.5 rounded">$1</mark>');
+    }
+
+    // =========================================================
+    // 3 & 5. REAL SEARCH, HISTORY, AND RECENTLY VIEWED SHOWCASES
+    // =========================================================
+    function getRecentlyViewedShowcases() {
+      return state.recentlyViewedShowcases
+        .map(id => SHOWCASE_WORK.find(work => work.id === id))
+        .filter(Boolean)
+        .slice(0, 6);
+    }
+
+    function renderSearchHistory() {
+      if (!state.recentSearches.length) return '';
+      return `
+        <section class="bg-white/80 rounded-2xl p-3 shadow-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-purple-950">Recent Search History</h3>
+            <button onclick="clearAllSearchHistory()" class="btn-press text-[10px] font-bold text-accent px-2 py-1 rounded-lg hover:bg-purple-50">Clear all</button>
+          </div>
+          <div class="space-y-1">
+            ${state.recentSearches.map((item, index) => `
+              <div class="btn-press flex items-center justify-between rounded-xl px-2.5 py-2 hover:bg-purple-50 cursor-pointer" onclick="applyRecentSearchByIndex(${index})">
+                <span class="flex items-center space-x-2 min-w-0">
+                  <i data-lucide="history" class="w-3.5 h-3.5 text-purple-500 flex-shrink-0"></i>
+                  <span class="text-[11px] font-semibold text-slate-800 truncate">${escapeHtml(item)}</span>
+                </span>
+                <button aria-label="Remove ${escapeHtml(item)}" onclick="removeRecentSearchByIndex(${index}, event)" class="btn-press p-1 rounded-full text-slate-400 hover:text-slate-800 hover:bg-white">
+                  <i data-lucide="x" class="w-3 h-3"></i>
+                </button>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderRecentlyViewedShowcases() {
+      const viewed = getRecentlyViewedShowcases();
+      if (!viewed.length) return '';
+      return `
+        <section class="bg-white/80 rounded-2xl p-3 shadow-xs space-y-2">
+          <div class="flex items-center justify-between">
+            <h3 class="text-[11px] font-extrabold uppercase tracking-wider text-purple-950">Recently Viewed Showcases</h3>
+            <span class="text-[10px] font-semibold text-slate-400">Your activity</span>
+          </div>
+          <div class="flex space-x-2.5 overflow-x-auto no-scrollbar -mx-1 px-1">
+            ${viewed.map(work => {
+              const srv = state.services.find(item => item.id === work.serviceId);
+              return `
+                <button onclick="openShowcaseViewer('${work.serviceId}', '${work.id}')" class="btn-press text-left flex-shrink-0 w-36 rounded-xl overflow-hidden bg-white shadow-2xs hover:shadow-xs">
+                  <img src="${work.image}" class="w-full h-16 object-cover" alt="${work.title}"/>
+                  <span class="block p-2 text-[10px] font-bold leading-snug text-slate-800 line-clamp-2">${srv ? srv.title : work.title}</span>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      `;
+    }
+
+    function renderSearchResultService(srv, q) {
+      return `
+        <div onclick="openShowcaseViewer('${srv.id}', 0)" class="btn-press bg-white/90 rounded-2xl p-3 flex items-center justify-between shadow-2xs hover:shadow-xs cursor-pointer">
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <img src="${srv.image}" class="w-[52px] h-[52px] rounded-xl object-cover flex-shrink-0 btn-press" alt="${srv.title}"/>
+            <div class="min-w-0">
+              <div class="flex items-center space-x-1.5">
+                <span class="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-accent">${highlightQueryMatch(srv.category, q)}</span>
+                <span class="text-[10px] text-slate-400">• ${srv.delivery}</span>
+              </div>
+              <h4 class="text-xs font-bold text-slate-950 truncate mt-0.5">${highlightQueryMatch(srv.title, q)}</h4>
+              <p class="text-[11px] text-surface-muted truncate mt-0.5">${highlightQueryMatch(srv.shortDesc, q)}</p>
+              <span class="text-xs font-black text-purple-950 mt-1 block">${srv.price}</span>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-accent flex-shrink-0 ml-2"></i>
+        </div>
+      `;
+    }
+
+    function renderSearchResultShowcase(work, q) {
+      const srv = state.services.find(item => item.id === work.serviceId);
+      return `
+        <div onclick="openShowcaseViewer('${work.serviceId}', '${work.id}')" class="btn-press bg-white/90 rounded-2xl p-3 flex items-center justify-between shadow-2xs hover:shadow-xs cursor-pointer">
+          <div class="flex items-center space-x-3 overflow-hidden">
+            <img src="${work.image}" class="w-[52px] h-[52px] rounded-xl object-cover flex-shrink-0" alt="${work.title}"/>
+            <div class="min-w-0">
+              <span class="text-[9px] uppercase font-extrabold px-1.5 py-0.5 rounded bg-purple-50 text-accent">${srv ? highlightQueryMatch(srv.title, q) : 'Showcase'}</span>
+              <h4 class="text-xs font-bold text-slate-950 truncate mt-1">${highlightQueryMatch(work.title, q)}</h4>
+              <p class="text-[11px] text-surface-muted truncate mt-0.5">${highlightQueryMatch(work.blurb, q)}</p>
+            </div>
+          </div>
+          <i data-lucide="chevron-right" class="w-4 h-4 text-accent flex-shrink-0 ml-2"></i>
+        </div>
+      `;
+    }
+
+    function renderSearch() {
+      const q = (state.searchQuery || '').trim();
+      const qLower = q.toLowerCase();
+
+      if (!q) {
+        const hasActivity = state.recentSearches.length || getRecentlyViewedShowcases().length;
+        return `
+          <div class="space-y-3 pt-1 pb-16">
+            ${renderSearchHistory()}
+            ${renderRecentlyViewedShowcases()}
+            ${hasActivity ? '' : `
+              <div class="py-14 px-4 text-center space-y-2">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center mx-auto mb-2">
+                  <i data-lucide="search" class="w-6 h-6"></i>
+                </div>
+                <h3 class="text-xs font-bold text-slate-900">Search HAVCAN Catalogue</h3>
+                <p class="text-[11px] text-surface-muted max-w-xs mx-auto">Search real services and showcases by name, category, or capability.</p>
+              </div>
+            `}
+          </div>
+        `;
+      }
+
+      const matchedServices = state.services.filter(srv =>
+        [srv.title, srv.category, srv.shortDesc, srv.fullDesc, ...(srv.tags || [])]
+          .some(value => value.toLowerCase().includes(qLower))
+      );
+      const matchedShowcases = SHOWCASE_WORK.filter(work => {
+        const srv = state.services.find(item => item.id === work.serviceId);
+        return [work.title, work.blurb, srv ? srv.title : '', srv ? srv.category : '']
+          .some(value => value.toLowerCase().includes(qLower));
+      });
+      const total = matchedServices.length + matchedShowcases.length;
+
+      if (!total) {
+        return `
+          <div class="space-y-4 pt-4 pb-16">
+            <div class="text-center py-12 px-4 bg-white/90 rounded-2xl shadow-xs space-y-2">
+              <i data-lucide="search-x" class="w-9 h-9 mx-auto text-purple-400"></i>
+              <h4 class="text-sm font-extrabold text-slate-950">Not Found</h4>
+              <p class="text-xs text-surface-muted max-w-xs mx-auto">No matching HAVCAN services or showcases found.</p>
+            </div>
+          </div>
+        `;
+      }
+
+      return `
+        <div class="space-y-4 pt-1 pb-16">
+          <div class="flex items-center justify-between px-1">
+            <span class="text-xs font-bold text-slate-500">HAVCAN results for "<span class="text-slate-950 font-extrabold">${escapeHtml(q)}</span>"</span>
+            <span class="text-[11px] font-bold text-purple-900 bg-purple-100 px-2 py-0.5 rounded-full">${total} found</span>
+          </div>
+          ${matchedServices.length ? `
+            <section class="space-y-2">
+              <h3 class="text-[10px] uppercase tracking-wider font-extrabold text-purple-900 px-1">Services</h3>
+              ${matchedServices.map(srv => renderSearchResultService(srv, q)).join('')}
+            </section>
+          ` : ''}
+          ${matchedShowcases.length ? `
+            <section class="space-y-2">
+              <h3 class="text-[10px] uppercase tracking-wider font-extrabold text-purple-900 px-1">Showcases</h3>
+              ${matchedShowcases.map(work => renderSearchResultShowcase(work, q)).join('')}
+            </section>
+          ` : ''}
+        </div>
+      `;
+    }
+
+    let showcaseSuppressClickUntil = 0;
+    let showcaseGesture = null;
+
+    function recordRecentlyViewedShowcase(showcaseId) {
+      if (!showcaseId) return;
+      state.recentlyViewedShowcases = [
+        showcaseId,
+        ...state.recentlyViewedShowcases.filter(id => id !== showcaseId)
+      ].slice(0, 6);
+      saveState();
+    }
+
+    function renderShowcaseViewer() {
+      const viewerState = state.showcaseViewer;
+      const viewer = document.getElementById('showcase-viewer');
+      const track = document.getElementById('showcase-track');
+      const details = document.getElementById('showcase-static-details');
+      const title = document.getElementById('showcase-viewer-title');
+      const count = document.getElementById('showcase-viewer-count');
+      const hint = document.getElementById('showcase-viewer-hint');
+      if (!viewer || !track || !details || !viewerState.items.length) return;
+
+      const srv = state.services.find(item => item.id === viewerState.serviceId);
+      if (title) title.innerText = srv ? srv.title : 'HAVCAN Showcase';
+      if (count) count.innerText = `${viewerState.activeIndex + 1} / ${viewerState.items.length}`;
+      if (hint) hint.innerText = viewerState.items.length > 1 ? 'Swipe between designs' : 'Tap the preview to view fullscreen';
+
+      track.innerHTML = viewerState.items.map((work, index) => {
+        return `
+          <article class="showcase-slide" data-showcase-index="${index}">
+            <button class="showcase-preview-button btn-press" onclick="openShowcasePhoto('${work.image}', '${escapeHtml(work.title)}')" aria-label="View ${escapeHtml(work.title)} fullscreen">
+              <img src="${work.image}" alt="${work.title} fullscreen preview" loading="eager"/>
+            </button>
+          </article>
+        `;
+      }).join('');
+
+      renderShowcaseDetails();
+      applyShowcaseTrackPosition(true);
+      lucide.createIcons();
+    }
+
+    function renderShowcaseDetails() {
+      const details = document.getElementById('showcase-static-details');
+      const viewerState = state.showcaseViewer;
+      const work = viewerState.items[viewerState.activeIndex];
+      if (!details || !work) return;
+
+      const workService = state.services.find(item => item.id === work.serviceId);
+      const relatedItems = viewerState.items
+        .map((relatedWork, relatedIndex) => ({ work: relatedWork, index: relatedIndex }))
+        .filter(related => related.index !== viewerState.activeIndex);
+
+      details.innerHTML = `
+        ${relatedItems.length ? `
+          <div class="showcase-related-strip space-y-2">
+            <div class="flex items-center justify-between">
+              <h3 class="text-[11px] font-extrabold text-slate-950">More from this service</h3>
+              <span class="text-[9px] font-bold uppercase tracking-wider text-purple-700">Same service</span>
+            </div>
+            <div class="flex gap-2.5 overflow-x-auto no-scrollbar -mx-1 px-1 pb-1">
+              ${relatedItems.map(related => `
+                <button class="showcase-related-card btn-press" onclick="setShowcaseIndex(${related.index})" aria-label="Show ${escapeHtml(related.work.title)}">
+                  <img src="${related.work.image}" alt="${related.work.title}" loading="lazy"/>
+                  <span class="block p-2 text-[10px] font-bold leading-snug text-slate-800 line-clamp-2">${escapeHtml(related.work.title)}</span>
+                </button>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        <div class="space-y-3 pt-4">
+          <div class="flex items-center justify-between">
+            <span class="text-[10px] uppercase tracking-wider font-extrabold text-accent bg-purple-50 px-2 py-1 rounded-full">${workService ? workService.category : 'HAVCAN'}</span>
+            <span class="text-[10px] font-bold text-slate-400">${workService ? workService.delivery : ''}</span>
+          </div>
+          <h1 class="text-xl font-extrabold tracking-tight text-slate-950">${work.title}</h1>
+          <p class="text-xs text-slate-700 leading-relaxed">${workService ? workService.fullDesc : work.blurb}</p>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="bg-white/80 rounded-xl p-2.5 shadow-2xs">
+              <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-400">Service</span>
+              <span class="text-[11px] font-extrabold text-slate-900">${workService ? workService.title : 'HAVCAN'}</span>
+            </div>
+            <div class="bg-white/80 rounded-xl p-2.5 shadow-2xs">
+              <span class="block text-[9px] uppercase tracking-wider font-bold text-slate-400">Showcase</span>
+              <span class="text-[11px] font-extrabold text-slate-900">${viewerState.activeIndex + 1} of ${viewerState.items.length}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function applyShowcaseTrackPosition(animate = true, dragOffset = 0) {
+      const track = document.getElementById('showcase-track');
+      if (!track) return;
+      track.classList.toggle('is-dragging', !animate);
+      const index = state.showcaseViewer.activeIndex || 0;
+      track.style.transform = `translate3d(calc(-${index * 100}% + ${dragOffset}px), 0, 0)`;
+    }
+
+    function setShowcaseIndex(nextIndex) {
+      const total = state.showcaseViewer.items.length;
+      if (!total) return;
+      state.showcaseViewer.activeIndex = Math.max(0, Math.min(nextIndex, total - 1));
+      const work = state.showcaseViewer.items[state.showcaseViewer.activeIndex];
+      if (work) recordRecentlyViewedShowcase(work.id);
+      const count = document.getElementById('showcase-viewer-count');
+      if (count) count.innerText = `${state.showcaseViewer.activeIndex + 1} / ${total}`;
+      renderShowcaseDetails();
+      applyShowcaseTrackPosition(true);
+    }
+
+    function openShowcasePhoto(url, caption) {
+      if (Date.now() < showcaseSuppressClickUntil) return;
+      openPhotoViewer(url, caption);
+    }
+
+    function setupShowcaseGestures() {
+      const viewport = document.getElementById('showcase-track-viewport');
+      const track = document.getElementById('showcase-track');
+      if (!viewport || !track) return;
+
+      viewport.onpointerdown = event => {
+        if (event.pointerType === 'mouse' && event.button !== 0) return;
+        if (event.target.closest('.showcase-related-strip')) return;
+        showcaseGesture = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          offsetX: 0,
+          dragging: false
+        };
+      };
+
+      viewport.onpointermove = event => {
+        if (!showcaseGesture || showcaseGesture.pointerId !== event.pointerId) return;
+        const dx = event.clientX - showcaseGesture.startX;
+        const dy = event.clientY - showcaseGesture.startY;
+        if (!showcaseGesture.dragging) {
+          if (Math.abs(dy) > Math.abs(dx) || Math.abs(dx) < 8) return;
+          showcaseGesture.dragging = true;
+          track.classList.add('is-dragging');
+          viewport.setPointerCapture?.(event.pointerId);
+        }
+        if (event.cancelable) event.preventDefault();
+        showcaseGesture.offsetX = dx;
+        const atStart = state.showcaseViewer.activeIndex === 0 && dx > 0;
+        const atEnd = state.showcaseViewer.activeIndex === state.showcaseViewer.items.length - 1 && dx < 0;
+        const resistance = atStart || atEnd ? 0.28 : 1;
+        applyShowcaseTrackPosition(false, dx * resistance);
+      };
+
+      const finishGesture = event => {
+        if (!showcaseGesture || showcaseGesture.pointerId !== event.pointerId) return;
+        const gesture = showcaseGesture;
+        showcaseGesture = null;
+        const dx = gesture.offsetX;
+        if (gesture.dragging) {
+          showcaseSuppressClickUntil = Date.now() + 350;
+          const threshold = Math.max(44, (viewport.clientWidth || 320) * 0.16);
+          if (Math.abs(dx) > threshold) {
+            setShowcaseIndex(state.showcaseViewer.activeIndex + (dx < 0 ? 1 : -1));
+          } else {
+            applyShowcaseTrackPosition(true);
+          }
+        } else {
+          applyShowcaseTrackPosition(true);
+        }
+        track.classList.remove('is-dragging');
+      };
+
+      viewport.onpointerup = finishGesture;
+      viewport.onpointercancel = finishGesture;
+    }
+
+    function openShowcaseViewer(serviceId, showcaseId = 0) {
+      const items = SHOWCASE_WORK.filter(work => work.serviceId === serviceId);
+      if (!items.length) return;
+      const selectedIndex = typeof showcaseId === 'number'
+        ? Math.max(0, Math.min(showcaseId, items.length - 1))
+        : Math.max(0, items.findIndex(work => work.id === showcaseId));
+      state.showcaseViewer = {
+        serviceId,
+        items,
+        activeIndex: selectedIndex
+      };
+      const activeWork = items[selectedIndex];
+      if (activeWork) {
+        recordRecentlyViewedShowcase(activeWork.id);
+        if (state.searchQuery.trim()) recordSearchQuery();
+      }
+      renderShowcaseViewer();
+      const viewer = document.getElementById('showcase-viewer');
+      if (viewer) {
+        viewer.classList.remove('showcase-viewer-hidden');
+        viewer.classList.add('showcase-viewer-active');
+      }
+      document.body.classList.add('showcase-viewer-open');
+      setupShowcaseGestures();
+    }
+
+    function closeShowcaseViewer() {
+      const viewer = document.getElementById('showcase-viewer');
+      if (viewer) {
+        viewer.classList.remove('showcase-viewer-active');
+        viewer.classList.add('showcase-viewer-hidden');
+      }
+      document.body.classList.remove('showcase-viewer-open');
+      showcaseGesture = null;
+    }
+
+    function openChatFromShowcase() {
+      const activeWork = state.showcaseViewer.items[state.showcaseViewer.activeIndex];
+      if (activeWork) openServiceChat(activeWork.serviceId, activeWork.id);
+    }
+
+    // =========================================================
+    // OTHER PAGES (HOME, ORDERS, PROFILE)
+    // =========================================================
+    function renderHome() {
+      const popular = state.services.slice(0, 4);
+      const featured = state.services.slice(2, 10);
+
+      return `
+        <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#18092B] via-[#2E1065] to-[#120722] p-5 text-white shadow-xl">
+          <div class="relative z-10 space-y-3">
+            <div class="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full bg-white/10 text-purple-200 text-[10px] font-bold tracking-wide border border-white/10">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-purple-300"></i>
+              <span>Directly Supervised Creative Service</span>
+            </div>
+            
+            <h1 class="text-2xl font-extrabold leading-snug tracking-tight text-white">
+              Have Work.<br/><span class="text-purple-300">We Direct & Deliver.</span>
+            </h1>
+            
+            <p class="text-xs text-purple-100/80 leading-relaxed max-w-[290px]">
+              No bidding wars or unreliable freelance queues. Every project is coordinated by our senior creative leads.
+            </p>
+
+            <div class="pt-1" onclick="navigateTo('search')">
+              <div class="bg-white text-slate-800 rounded-xl p-3 flex items-center space-x-3 shadow-md cursor-pointer btn-press border border-white/20">
+                <i data-lucide="search" class="w-4 h-4 text-purple-900 flex-shrink-0"></i>
+                <span class="text-xs font-medium text-slate-400">What work do you need done today?</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-2.5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-slate-900">Popular Services</h2>
+            <button onclick="navigateTo('search')" class="text-xs font-bold text-accent btn-press">Explore</button>
+          </div>
+          <div class="flex space-x-3 overflow-x-auto no-scrollbar -mx-4 px-4 py-1">
+            ${popular.map(srv => renderServiceCard(srv, true)).join('')}
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-4 border border-surface-border shadow-xs space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-extrabold uppercase tracking-wider text-purple-950">How HAVCAN Works</h3>
+            <span class="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">Managed Delivery</span>
+          </div>
+          <div class="grid grid-cols-3 gap-2 text-center pt-1">
+            <div class="p-2.5 rounded-xl bg-surface-base border border-surface-border">
+              <div class="w-6 h-6 rounded-full bg-purple-100 text-accent flex items-center justify-center mx-auto mb-1.5 font-black text-xs">1</div>
+              <p class="text-[11px] font-bold text-slate-900">Brief & Spec</p>
+              <p class="text-[9px] text-surface-muted leading-tight mt-0.5">Submit project details</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface-base border border-surface-border">
+              <div class="w-6 h-6 rounded-full bg-purple-100 text-accent flex items-center justify-center mx-auto mb-1.5 font-black text-xs">2</div>
+              <p class="text-[11px] font-bold text-slate-900">Creative Lead</p>
+              <p class="text-[9px] text-surface-muted leading-tight mt-0.5">HAVCAN directs team</p>
+            </div>
+            <div class="p-2.5 rounded-xl bg-surface-base border border-surface-border">
+              <div class="w-6 h-6 rounded-full bg-purple-100 text-accent flex items-center justify-center mx-auto mb-1.5 font-black text-xs">3</div>
+              <p class="text-[11px] font-bold text-slate-900">Final Assets</p>
+              <p class="text-[9px] text-surface-muted leading-tight mt-0.5">Commercial files ready</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-3 pt-1">
+          <div class="flex items-center justify-between">
+            <h2 class="text-sm font-extrabold text-slate-900">Featured Creative Solutions</h2>
+            <button onclick="navigateTo('search')" class="text-xs font-bold text-accent btn-press">See All</button>
+          </div>
+          <div class="space-y-3">
+            ${featured.map(srv => renderServiceCard(srv, false)).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderServiceCard(srv, isCarousel = false) {
+      return `
+        <div class="${isCarousel ? 'flex-shrink-0 w-64' : 'w-full'} showcase-card btn-press bg-white rounded-2xl border border-surface-border overflow-hidden shadow-xs hover:shadow-md transition-all flex flex-col justify-between cursor-pointer" role="button" tabindex="0" aria-label="Open ${srv.title} showcase" onclick="if (!event.target.closest('button')) openServiceDetailModal('${srv.id}')" onkeydown="if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); openServiceDetailModal('${srv.id}'); }">
+          <div>
+            <div class="relative h-32 w-full bg-slate-100 overflow-hidden cursor-pointer">
+              <img src="${srv.image}" class="w-full h-full object-cover hover:scale-105 transition-transform duration-300" alt="${srv.title}" />
+              <div class="absolute top-2 left-2 bg-slate-950/85 backdrop-blur-xs text-white text-[9px] font-extrabold px-2 py-0.5 rounded-full flex items-center space-x-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-400"></span>
+                <span>HAVCAN</span>
+              </div>
+            </div>
+
+            <div class="p-3.5 space-y-1.5">
+              <div class="flex items-center justify-between text-[10px]">
+                <span class="text-accent font-bold bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">${srv.category}</span>
+                <span class="text-slate-500 font-medium flex items-center space-x-1">
+                  <i data-lucide="clock" class="w-3 h-3 text-slate-400"></i>
+                  <span>${srv.delivery}</span>
+                </span>
+              </div>
+
+              <h3 class="font-bold text-xs text-slate-900 line-clamp-1 cursor-pointer hover:text-accent transition">
+                ${srv.title}
+              </h3>
+              <p class="text-[11px] text-surface-muted line-clamp-2 leading-relaxed">
+                ${srv.shortDesc}
+              </p>
+            </div>
+          </div>
+
+          <div class="p-3.5 pt-0 border-t border-surface-border/60 flex items-center justify-between mt-1">
+            <div>
+              <span class="text-[9px] uppercase font-bold tracking-wider text-slate-400 block">Fixed Price</span>
+              <span class="text-sm font-black text-slate-950 mt-0.5 block">${srv.price}</span>
+            </div>
+            <button onclick="openServiceDetailModal('${srv.id}')" class="btn-press px-3 py-1.5 rounded-xl bg-accent text-white font-bold text-xs hover:bg-accent-hover shadow-sm">
+              View Details
+            </button>
+          </div>
+        </div>
+      `;
+    }
+
+    const PROJECT_STAGES = [
+      { key: 'Payment', icon: 'wallet-cards' },
+      { key: 'Confirmed', icon: 'badge-check' },
+      { key: 'In Progress', icon: 'pencil-ruler' },
+      { key: 'Quality Check', icon: 'scan-search' },
+      { key: 'Client Review', icon: 'eye' },
+      { key: 'Revision', icon: 'refresh-cw' },
+      { key: 'Completed', icon: 'check-check' }
+    ];
+
+    const PROJECT_STATUS_INDEX = {
+      'Pending': 0,
+      'Confirmed': 1,
+      'In Progress': 2,
+      'Quality Check': 3,
+      'Client Review': 4,
+      'Revision': 5,
+      'Completed': 6
+    };
+
+    function getProjectService(order) {
+      return state.services.find(service => service.id === order.serviceId) || {
+        title: order.serviceTitle || 'HAVCAN Project',
+        category: 'Managed Service',
+        image: ''
+      };
+    }
+
+    function getProjectIcon(order) {
+      const category = (getProjectService(order).category || '').toLowerCase();
+      if (category.includes('video')) return 'clapperboard';
+      if (category.includes('development')) return 'code-2';
+      if (category.includes('presentation')) return 'presentation';
+      if (category.includes('design')) return 'pen-tool';
+      return 'sparkles';
+    }
+
+    function getProjectStatus(order) {
+      return PROJECT_STATUS_INDEX[order.status] !== undefined ? order.status : 'Pending';
+    }
+
+    function getProjectStageIndex(order) {
+      return PROJECT_STATUS_INDEX[getProjectStatus(order)];
+    }
+
+    function getProjectProgress(order) {
+      const progressByStatus = {
+        'Pending': 8,
+        'Confirmed': 24,
+        'In Progress': 46,
+        'Quality Check': 64,
+        'Client Review': 80,
+        'Revision': 73,
+        'Completed': 100
+      };
+      return progressByStatus[getProjectStatus(order)] || 8;
+    }
+
+    function getProjectStatusClass(status) {
+      return `project-status-${status.toLowerCase().replace(/\s+/g, '-')}`;
+    }
+
+    function getProjectDate(order) {
+      return order.createdAt || order.date || 'Recently started';
+    }
+
+    function getProjectFiles(order) {
+      return order.uploadedFiles || [
+        { name: 'Project brief', meta: 'Received' },
+        { name: 'Reference material', meta: 'On file' }
+      ];
+    }
+
+    function renderProjectStatus(order, extraClass = '') {
+      const status = getProjectStatus(order);
+      return `<span class="project-status ${getProjectStatusClass(status)} ${extraClass}">${status}</span>`;
+    }
+
+    function renderOrders() {
+      return `
+        <div class="project-page project-list-page pb-12">
+          <div class="flex items-end justify-between gap-3">
+            <div>
+              <p class="project-kicker">Workspace</p>
+              <h1 class="project-page-title mt-2">Your Projects</h1>
+              <p class="project-page-subtitle mt-2">A clear view of what HAVCAN is making, reviewing and delivering for you.</p>
+            </div>
+            <span class="project-list-summary">${state.orders.length} ${state.orders.length === 1 ? 'project' : 'projects'}</span>
+          </div>
+
+          <div class="project-list mt-5">
+            ${state.orders.map(order => {
+              const progress = getProjectProgress(order);
+              const service = getProjectService(order);
+              return `
+                <button type="button" onclick="navigateTo('order-detail', '${order.id}')" class="project-row btn-press" aria-label="Open ${service.title} project">
+                  <div class="project-row-head">
+                    <div class="project-service">
+                      <span class="project-service-icon"><i data-lucide="${getProjectIcon(order)}"></i></span>
+                      <span class="min-w-0">
+                        <span class="project-service-name block">${service.title || order.serviceTitle}</span>
+                        <span class="project-service-type block">${service.category || 'Managed project'}</span>
+                      </span>
+                    </div>
+                    ${renderProjectStatus(order)}
+                  </div>
+                  <div class="project-row-meta">
+                    <span><i data-lucide="hash"></i>${order.id}</span>
+                    <span><i data-lucide="calendar-days"></i>${getProjectDate(order)}</span>
+                  </div>
+                  <div class="project-progress-line">
+                    <div class="project-progress-track" aria-label="${progress}% complete">
+                      <div class="project-progress-fill" style="width:${progress}%"></div>
+                    </div>
+                    <span class="project-progress-value">${progress}%</span>
+                  </div>
+                </button>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProjectStage(order, stage, index) {
+      const currentIndex = getProjectStageIndex(order);
+      const stageState = index < currentIndex ? 'is-complete' : (index === currentIndex ? 'is-current' : '');
+      const stageMeta = index === currentIndex ? 'Current' : (index < currentIndex ? 'Done' : '');
+      return `
+        <div class="project-stage ${stageState}">
+          <span class="project-stage-dot">
+            <i data-lucide="${index < currentIndex ? 'check' : stage.icon}"></i>
+          </span>
+          <span class="project-stage-label">${stage.key}</span>
+          ${stageMeta ? `<span class="project-stage-meta">${stageMeta}</span>` : ''}
+        </div>
+      `;
+    }
+
+    function renderProjectInfoSection(title, icon, content, extraClass = '') {
+      return `
+        <section class="project-info-section ${extraClass}">
+          <h3 class="project-info-title"><i data-lucide="${icon}"></i>${title}</h3>
+          ${content}
+        </section>
+      `;
+    }
+
+    function renderOrderDetail() {
+      const order = state.orders.find(o => o.id === state.activeOrderId) || state.orders[0];
+      if (!order) {
+        return `
+          <div class="project-page project-detail-page">
+            <p class="project-kicker">Workspace</p>
+            <h1 class="project-page-title mt-2">No projects yet</h1>
+            <p class="project-page-subtitle mt-2">Your managed HAVCAN work will appear here.</p>
+          </div>
+        `;
+      }
+
+      const service = getProjectService(order);
+      const status = getProjectStatus(order);
+      const progress = getProjectProgress(order);
+      const currentIndex = getProjectStageIndex(order);
+      const timelineProgress = currentIndex >= PROJECT_STAGES.length - 1
+        ? 100
+        : Math.round((currentIndex / (PROJECT_STAGES.length - 1)) * 100);
+      const files = getProjectFiles(order);
+
+      return `
+        <div class="project-page project-detail-page">
+          <button type="button" onclick="navigateTo('orders')" class="project-back btn-press" aria-label="Back to Your Projects">
+            <i data-lucide="arrow-left"></i>
+            <span>Your Projects</span>
+          </button>
+
+          <div class="project-detail-heading">
+            <span class="project-service-icon"><i data-lucide="${getProjectIcon(order)}"></i></span>
+            <span class="min-w-0">
+              <h1 class="truncate">${service.title || order.serviceTitle}</h1>
+              <p>Managed project workspace</p>
+            </span>
+          </div>
+
+          <section class="project-overview">
+            <div class="project-overview-top">
+              <div>
+                <p class="project-overview-label">Project Overview</p>
+                <p class="project-overview-id">#${order.id}</p>
+              </div>
+              ${renderProjectStatus(order)}
+            </div>
+            <div class="project-overview-progress">
+              <div>
+                <strong>${progress}%</strong>
+                <span>${status}</span>
+              </div>
+              <p class="project-overview-date">${getProjectDate(order)}<br>${order.deadline || 'Managed delivery'}</p>
+            </div>
+            <div class="project-overview-track"><span style="width:${progress}%"></span></div>
+          </section>
+
+          <section class="project-section">
+            <div class="project-section-heading">
+              <h2>Progress Timeline</h2>
+              <span>${currentIndex + 1} of ${PROJECT_STAGES.length} stages</span>
+            </div>
+            <div class="project-surface project-timeline">
+              <div class="project-timeline-rail"><span style="height:${timelineProgress}%"></span></div>
+              ${PROJECT_STAGES.map((stage, index) => renderProjectStage(order, stage, index)).join('')}
+            </div>
+          </section>
+
+          <section class="project-section">
+            <div class="project-section-heading">
+              <h2>Project Information</h2>
+              <span>Always available</span>
+            </div>
+            <div class="project-info-grid">
+              ${renderProjectInfoSection(
+                'Requirements / Brief',
+                'file-pen-line',
+                `<p class="project-info-copy">${order.requirements || 'Your brief is being reviewed by the HAVCAN team.'}</p>`,
+                'is-wide'
+              )}
+              ${renderProjectInfoSection(
+                'Uploaded Files',
+                'paperclip',
+                `<div class="project-file-list">${files.map(file => `
+                  <div class="project-file">
+                    <i data-lucide="${file.icon || 'file-text'}"></i>
+                    <span>${file.name || file.title || 'Project file'}</span>
+                    <small>${file.meta || 'Available'}</small>
+                  </div>
+                `).join('')}</div>`
+              )}
+              ${renderProjectInfoSection(
+                'Deliverables',
+                'package-check',
+                `<p class="project-info-copy">${order.deliverables || 'Final project files and handoff notes will appear here.'}</p>`
+              )}
+              ${renderProjectInfoSection(
+                'Messages',
+                'message-square',
+                `<p class="project-info-copy">Keep decisions and feedback with your managed creative lead.</p>
+                 <button type="button" onclick="navigateTo('chat', '${order.id}')" class="project-action btn-press">
+                   <i data-lucide="arrow-up-right"></i><span>Open messages</span>
+                 </button>`
+              )}
+              ${renderProjectInfoSection(
+                'Delivery',
+                'send',
+                `<p class="project-info-copy">${order.deliveryNote || `Managed handoff is planned within ${order.deadline || 'the agreed timeline'}.`}</p>`
+              )}
+              ${renderProjectInfoSection(
+                'Revision information',
+                'refresh-cw',
+                `<p class="project-info-copy">${order.revisionInfo || 'Feedback and included revisions are coordinated in the WhatsApp inbox.'}</p>`
+              )}
+              ${renderProjectInfoSection(
+                'Review',
+                'star',
+                `<p class="project-info-copy">${order.reviewInfo || 'Your review becomes available after delivery.'}</p>`
+              )}
+            </div>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderProfile() {
+      return `
+        <div class="space-y-4">
+          <div class="bg-white rounded-2xl border border-surface-border p-4 shadow-xs flex items-center space-x-3">
+            <div class="w-14 h-14 rounded-2xl bg-purple-50 flex items-center justify-center p-2 border border-purple-100 shadow-sm">
+              <img alt="HAVCAN" class="w-10 h-10 object-contain" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrkGpAAXYgqmiPJT59rNcAhrsCWZnwgrtrQ2Hr5F6cXr7BDxw-tzwFtX8xHYQOhBSiR-RGXy9DQxv22YeEX4gN9YtPoDKfm7whDsFXJFWBj6VtKAH6nFUFJFtI8jaeANLQ-DvBbux1apaMbaS_ks5iS4PPiH1_D-NIUVGdXccO9PRUtbTSNAlmXQyyHI9Uyj1Irhm1MTUUfpt0OwqinuTWiSzbE-1R7UmhaRPH8wM-AbnYV6hY-Ch81Bv9zAv51pJJaw"/>
+            </div>
+            <div class="flex-1">
+              <div class="flex items-center space-x-1.5">
+                <h2 class="font-extrabold text-sm text-slate-900">${state.currentUser.name}</h2>
+                <span class="text-[9px] uppercase font-bold px-1.5 py-0.5 rounded bg-purple-100 text-purple-900">${state.currentUser.role}</span>
+              </div>
+              <p class="text-xs text-surface-muted">${state.currentUser.email}</p>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl border border-surface-border overflow-hidden shadow-xs divide-y divide-surface-border text-xs">
+            <a href="#" onclick="navigateTo('chat'); return false;" class="btn-press w-full p-3.5 flex items-center justify-between hover:bg-surface-base text-left block">
+              <div class="flex items-center space-x-2.5">
+                <i data-lucide="phone" class="w-4 h-4 text-emerald-600"></i>
+                <span class="font-semibold text-slate-800">Direct Support (+91 9631126328)</span>
+              </div>
+              <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+            </a>
+          </div>
+        </div>
+      `;
+    }
+
+    function openServiceDetailModal(serviceId) {
+      openShowcaseViewer(serviceId, 0);
+    }
+
+    function openServiceChat(serviceId, showcaseId = null) {
+      const srv = state.services.find(s => s.id === serviceId);
+      if (!srv) return;
+      const matchingOrder = state.orders.find(order => order.serviceId === serviceId);
+      const showcase = showcaseId ? SHOWCASE_WORK.find(work => work.id === showcaseId) : null;
+      state.whatsappContextServiceId = serviceId;
+      state.whatsappContextShowcaseId = showcase ? showcase.id : null;
+      closeShowcaseViewer();
+      navigateTo('chat', matchingOrder ? matchingOrder.id : null);
+    }
+
+    function renderApp() {
+      const appView = document.getElementById('app-view');
+      let content = '';
+      switch (state.currentRoute) {
+        case 'home': content = renderHome(); break;
+        case 'search': content = renderSearch(); break;
+        case 'orders': content = renderOrders(); break;
+        case 'order-detail': content = renderOrderDetail(); break;
+        case 'chat': content = renderWhatsAppInbox(); break;
+        case 'profile': content = renderProfile(); break;
+        default: content = renderHome();
+      }
+      appView.innerHTML = content;
+      lucide.createIcons();
+      requestAnimationFrame(() => updateBottomBarPosition(false));
+      if (state.currentRoute === 'chat') {
+        startWhatsAppPolling();
+        if (!state.whatsapp.status && !state.whatsapp.loading) loadWhatsAppInbox();
+      } else {
+        stopWhatsAppPolling();
+      }
+    }
+
+    /*
+     * WhatsApp inbox integration.
+     * The visual shell above remains the original HAVCAN conversation surface;
+     * only its data source is replaced with the shared server API.
+     */
+    const HAVCAN_API_BASE_URL = String(
+      (window.HAVCAN_CONFIG && window.HAVCAN_CONFIG.apiBaseUrl)
+        || document.querySelector('meta[name="havcan-api-base-url"]')?.getAttribute('content')
+        || ''
+    ).replace(/\/+$/, '');
+
+    function whatsappRequest(url, options = {}) {
+      const requestUrl = `${HAVCAN_API_BASE_URL}${url}`;
+      return fetch(requestUrl, {
+        credentials: 'include',
+        ...options,
+        headers: { 'Accept': 'application/json', ...(options.headers || {}) }
+      }).then(async response => {
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload && (payload.message || payload.error) || `Request failed (${response.status})`);
+        }
+        return payload;
+      });
+    }
+
+    function whatsappActiveConversation() {
+      return state.whatsapp.conversations.find(item => item.id === state.whatsapp.activeConversationId)
+        || state.whatsapp.conversations[0]
+        || null;
+    }
+
+    function whatsappTime(value) {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    function whatsappStatusCopy() {
+      const status = state.whatsapp.status;
+      if (!status) return 'Connecting to WhatsApp';
+      if (!status.configured) return 'WhatsApp is not configured';
+      if (!status.connected) return 'WhatsApp is offline';
+      return 'WhatsApp Business connected';
+    }
+
+    function renderWhatsAppSkeleton() {
+      return `
+        <div class="space-y-2.5 animate-pulse">
+          <div class="h-16 rounded-2xl bg-white border border-purple-100"></div>
+          <div class="h-16 rounded-2xl bg-white border border-purple-100"></div>
+          <div class="h-16 rounded-2xl bg-white border border-purple-100"></div>
+        </div>
+      `;
+    }
+
+    function renderWhatsAppConversationList() {
+      const conversations = state.whatsapp.conversations;
+      if (!conversations.length) {
+        return `
+          <div class="rounded-2xl bg-white border border-surface-border p-5 text-center shadow-xs">
+            <div class="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center mx-auto mb-2">
+              <i data-lucide="message-circle" class="w-5 h-5"></i>
+            </div>
+            <h3 class="text-xs font-extrabold text-slate-900">No WhatsApp conversations</h3>
+            <p class="text-[11px] text-surface-muted leading-relaxed mt-1">New customer messages will appear here when they arrive.</p>
+          </div>
+        `;
+      }
+      return `
+        <div class="space-y-1.5">
+          ${conversations.map(conversation => {
+            const active = conversation.id === state.whatsapp.activeConversationId;
+            return `
+              <button type="button" onclick="selectWhatsAppConversation('${escapeHtml(conversation.id)}')" class="btn-press w-full text-left rounded-2xl p-3 ${active ? 'bg-purple-50 border-purple-200' : 'bg-white border-surface-border'} border shadow-2xs flex items-center gap-2.5">
+                <span class="w-9 h-9 rounded-xl ${active ? 'bg-purple-200 text-purple-900' : 'bg-emerald-50 text-emerald-700'} flex items-center justify-center flex-shrink-0">
+                  <i data-lucide="user-round" class="w-4 h-4"></i>
+                </span>
+                <span class="min-w-0 flex-1">
+                  <span class="flex items-center justify-between gap-2">
+                    <span class="text-xs font-extrabold text-slate-900 truncate">${escapeHtml(conversation.displayName || conversation.waId)}</span>
+                    <span class="text-[9px] text-slate-400 flex-shrink-0">${whatsappTime(conversation.lastMessageAt)}</span>
+                  </span>
+                  <span class="flex items-center justify-between gap-2 mt-0.5">
+                    <span class="text-[10px] text-slate-500 truncate">${escapeHtml(conversation.lastMessagePreview || 'No messages yet')}</span>
+                    ${conversation.unreadCount ? `<span class="min-w-4 h-4 px-1 rounded-full bg-emerald-500 text-white text-[9px] font-bold flex items-center justify-center">${conversation.unreadCount}</span>` : ''}
+                  </span>
+                </span>
+              </button>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }
+
+    function renderWhatsAppMessages() {
+      const messages = state.whatsapp.messages || [];
+      if (state.whatsapp.messagesLoading && !messages.length) return renderWhatsAppSkeleton();
+      if (!messages.length) {
+        return `
+          <div class="py-14 px-4 text-center">
+            <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-700 flex items-center justify-center mx-auto mb-2">
+              <i data-lucide="message-square" class="w-6 h-6"></i>
+            </div>
+            <h3 class="text-xs font-bold text-slate-900">Start the conversation</h3>
+            <p class="text-[11px] text-surface-muted max-w-xs mx-auto mt-1">Incoming customer messages will appear here.</p>
+          </div>
+        `;
+      }
+      return messages.map(renderWhatsAppMessageBubble).join('');
+    }
+
+    function renderWhatsAppMessageBubble(message) {
+      const isClient = message.direction === 'outbound';
+      const mediaUrl = message.mediaUrl ? `${HAVCAN_API_BASE_URL}${message.mediaUrl}` : '';
+      const media = mediaUrl
+        ? (String(message.mediaMimeType || '').startsWith('video')
+          ? `<div class="rounded-xl overflow-hidden mb-1.5 bg-black border border-white/10 max-h-52"><video src="${escapeHtml(mediaUrl)}" controls class="w-full h-auto object-cover"></video></div>`
+          : `<div class="rounded-xl overflow-hidden mb-1.5 bg-slate-900 border border-white/10 max-h-56 cursor-pointer relative group" onclick="openPhotoViewer('${escapeHtml(mediaUrl)}', '')"><img src="${escapeHtml(mediaUrl)}" class="w-full h-auto object-cover" alt="WhatsApp attachment"/><div class="absolute bottom-1.5 right-1.5 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1"><i data-lucide="maximize-2" class="w-2.5 h-2.5"></i><span>View</span></div></div>`)
+        : '';
+      const text = message.content ? `<p class="leading-relaxed break-words font-medium whitespace-pre-wrap">${escapeHtml(message.content)}</p>` : '';
+      return `
+        <div class="flex flex-col ${isClient ? 'items-end' : 'items-start'}" data-testid="whatsapp-message-${escapeHtml(message.id)}">
+          <div class="max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs ${isClient ? 'bg-purple-950 text-white rounded-tr-xs shadow-md border border-purple-800/40' : 'bg-white text-slate-800 rounded-tl-xs border border-surface-border shadow-xs'}">
+            ${media}${text}
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5 px-1 text-[9px] text-slate-400">
+            <span>${whatsappTime(message.occurredAt)}</span>
+            ${isClient ? `<span class="text-purple-400">${escapeHtml(message.status || 'sent')}</span>` : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderWhatsAppInbox() {
+      const active = whatsappActiveConversation();
+      const contextService = state.services.find(service => service.id === state.whatsappContextServiceId);
+      const contextShowcase = SHOWCASE_WORK.find(work => work.id === state.whatsappContextShowcaseId);
+      const status = state.whatsapp.status;
+      return `
+        <div class="flex flex-col h-[calc(100dvh-64px)] -mx-4 -my-3.5 relative bg-[#FAF9FC] overflow-hidden">
+          <div id="chat-messages-container" class="flex-1 overflow-y-auto px-3.5 pt-3 pb-24 space-y-3 text-xs">
+            <div class="rounded-2xl ${status && status.connected ? 'bg-emerald-50 border-emerald-200' : 'bg-purple-50 border-purple-200'} border p-3 shadow-2xs flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full ${status && status.connected ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
+              <span class="text-[10px] uppercase tracking-wider font-extrabold text-slate-800">${whatsappStatusCopy()}</span>
+              ${status && status.connected ? '<i data-lucide="refresh-cw" class="w-3 h-3 text-emerald-700 ml-auto"></i>' : ''}
+            </div>
+            ${contextService ? `
+              <div class="bg-purple-50 border border-purple-200/80 rounded-2xl p-3 shadow-2xs space-y-1.5 my-1">
+                <div class="flex items-center space-x-1.5"><i data-lucide="sparkles" class="w-3.5 h-3.5 text-accent"></i><span class="text-[10px] uppercase tracking-wider font-extrabold text-purple-900">Service context</span></div>
+              <p class="text-[11px] text-slate-800 leading-snug"><b>${escapeHtml(contextShowcase ? contextShowcase.title : contextService.title)}</b>${contextShowcase ? ` for ${escapeHtml(contextService.title)}` : ''} — linked to this WhatsApp conversation.</p>
+              </div>
+            ` : ''}
+            <div class="bg-white/90 border border-purple-200/80 rounded-2xl p-3 shadow-2xs space-y-2 my-1">
+              <div class="flex items-center justify-between gap-2">
+                <span class="text-[11px] font-extrabold text-slate-950">WhatsApp inbox</span>
+                <span class="text-[10px] text-slate-500">${state.whatsapp.conversations.length} ${state.whatsapp.conversations.length === 1 ? 'conversation' : 'conversations'}</span>
+              </div>
+              ${state.whatsapp.loading && !state.whatsapp.conversations.length ? renderWhatsAppSkeleton() : renderWhatsAppConversationList()}
+            </div>
+            ${state.whatsapp.error ? `<div class="rounded-2xl bg-rose-50 border border-rose-200 p-3 text-[11px] text-rose-800 flex items-center justify-between gap-2"><span>${escapeHtml(state.whatsapp.error)}</span><button type="button" onclick="loadWhatsAppInbox()" class="font-bold underline">Retry</button></div>` : ''}
+            ${active ? `
+              <div class="flex items-center gap-2 pt-1">
+                <span class="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center"><i data-lucide="message-circle" class="w-4 h-4"></i></span>
+                <span class="text-[11px] font-extrabold text-slate-900">${escapeHtml(active.displayName || active.waId)}</span>
+                <span class="text-[10px] text-slate-400">${escapeHtml(active.waId)}</span>
+              </div>
+              ${renderWhatsAppMessages()}
+            ` : `
+              <div class="py-12 text-center text-[11px] text-slate-500">Choose a WhatsApp conversation to view messages.</div>
+            `}
+          </div>
+        </div>
+      `;
+    }
+
+    async function loadWhatsAppInbox() {
+      const inbox = state.whatsapp;
+      inbox.loading = true;
+      inbox.error = null;
+      if (state.currentRoute === 'chat') renderApp();
+      try {
+        const [status, conversations] = await Promise.all([
+          whatsappRequest('/api/whatsapp/status'),
+          whatsappRequest('/api/whatsapp/conversations')
+        ]);
+        inbox.status = status;
+        inbox.conversations = Array.isArray(conversations) ? conversations : [];
+        if (!inbox.activeConversationId || !inbox.conversations.some(item => item.id === inbox.activeConversationId)) {
+          inbox.activeConversationId = inbox.conversations[0] ? inbox.conversations[0].id : null;
+        }
+        if (inbox.activeConversationId) await loadWhatsAppMessages(false);
+      } catch (error) {
+        inbox.error = error.message || 'WhatsApp could not be loaded.';
+      } finally {
+        inbox.loading = false;
+        if (state.currentRoute === 'chat') {
+          renderApp();
+          setTimeout(scrollWhatsAppMessagesToBottom, 40);
+        }
+      }
+    }
+
+    async function loadWhatsAppMessages(shouldRender = true) {
+      const conversation = whatsappActiveConversation();
+      if (!conversation) {
+        state.whatsapp.messages = [];
+        return;
+      }
+      state.whatsapp.messagesLoading = true;
+      try {
+        const messages = await whatsappRequest(`/api/whatsapp/conversations/${encodeURIComponent(conversation.id)}/messages`);
+        state.whatsapp.messages = Array.isArray(messages) ? messages : [];
+        state.whatsapp.error = null;
+      } catch (error) {
+        state.whatsapp.error = error.message || 'Messages could not be loaded.';
+      } finally {
+        state.whatsapp.messagesLoading = false;
+        if (shouldRender && state.currentRoute === 'chat') {
+          refreshWhatsAppMessagesDOM();
+          syncWhatsAppHeader();
+        }
+      }
+    }
+
+    function selectWhatsAppConversation(conversationId) {
+      state.whatsapp.activeConversationId = conversationId;
+      state.whatsapp.messages = [];
+      renderApp();
+      loadWhatsAppMessages(true);
+    }
+
+    function syncWhatsAppHeader() {
+      const active = whatsappActiveConversation();
+      const title = document.getElementById('chat-header-title');
+      const subtitle = document.getElementById('chat-header-subtitle');
+      if (title) title.innerText = active ? (active.displayName || active.waId) : 'WhatsApp inbox';
+      if (subtitle) subtitle.innerText = active ? `${active.waId} • ${whatsappStatusCopy()}` : whatsappStatusCopy();
+    }
+
+    function startWhatsAppPolling() {
+      const inbox = state.whatsapp;
+      if (inbox.pollTimer || state.currentRoute !== 'chat') return;
+      inbox.pollTimer = setInterval(async () => {
+        if (state.currentRoute !== 'chat') return;
+        try {
+          const conversations = await whatsappRequest('/api/whatsapp/conversations');
+          inbox.conversations = Array.isArray(conversations) ? conversations : [];
+          if (state.currentRoute === 'chat') renderApp();
+        } catch (error) {
+          inbox.error = error.message || 'WhatsApp could not be refreshed.';
+        }
+      }, 8000);
+      inbox.messagePollTimer = setInterval(() => {
+        if (state.currentRoute === 'chat' && whatsappActiveConversation()) loadWhatsAppMessages(true);
+      }, 6000);
+    }
+
+    function stopWhatsAppPolling() {
+      const inbox = state.whatsapp;
+      if (inbox.pollTimer) clearInterval(inbox.pollTimer);
+      if (inbox.messagePollTimer) clearInterval(inbox.messagePollTimer);
+      inbox.pollTimer = null;
+      inbox.messagePollTimer = null;
+    }
+
+    function scrollWhatsAppMessagesToBottom() {
+      const container = document.getElementById('chat-messages-container');
+      if (container) container.scrollTop = container.scrollHeight;
+    }
+
+    function refreshWhatsAppMessagesDOM() {
+      if (state.currentRoute !== 'chat') return;
+      renderApp();
+      setTimeout(scrollWhatsAppMessagesToBottom, 40);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderApp();
+      updateBottomBarPosition(false);
+      delayedCollapseNavBar(2200);
+      document.addEventListener('pointerdown', createTapRipple, { passive: true });
+      const navContainer = document.getElementById('bottom-bar-container');
+      if (navContainer && 'ResizeObserver' in window) {
+        const navObserver = new ResizeObserver(() => updateBottomBarPosition(false));
+        navObserver.observe(navContainer);
+      }
+      window.addEventListener('resize', () => updateBottomBarPosition(false));
+    });
+</script>
+</body></html>
