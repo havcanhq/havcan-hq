@@ -1,0 +1,9 @@
+packages:
+  - artifacts/api-server
+  - lib/db
+  - lib/api-zod
+
+catalog:
+  drizzle-orm: ^0.45.2
+  zod: ^3.25.76
+  "@types/node": ^22.0.0
